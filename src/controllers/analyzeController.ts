@@ -92,7 +92,7 @@ export async function analyzeItem(req: Request, res: Response, next: NextFunctio
         createdAt: new Date().toISOString()
       };
 
-      dbService.saveAnalysis(analysisRecord).catch((err) => console.warn('Non-blocking log skipped:', err?.message));
+      await dbService.saveAnalysis(analysisRecord);
 
       res.status(200).json({
         analysisId: analysisRecord.analysisId,
@@ -139,7 +139,7 @@ export async function analyzeItem(req: Request, res: Response, next: NextFunctio
       createdAt: new Date().toISOString()
     };
 
-    dbService.saveAnalysis(analysisRecord).catch((err) => console.warn('Non-blocking log skipped:', err?.message));
+    await dbService.saveAnalysis(analysisRecord);
 
     // Auto-cache snapshot in disposalHistory
     const historyRecord: DisposalHistoryRecord = {
@@ -151,7 +151,7 @@ export async function analyzeItem(req: Request, res: Response, next: NextFunctio
       evidenceSnapshot: analysisRecord.evidence,
       timestamp: new Date().toISOString()
     };
-    dbService.saveHistory(historyRecord).catch((err) => console.warn('Non-blocking log skipped:', err?.message));
+    await dbService.saveHistory(historyRecord);
 
     res.status(200).json({
       analysisId: analysisRecord.analysisId,
