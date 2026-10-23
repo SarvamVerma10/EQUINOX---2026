@@ -349,9 +349,10 @@ export async function analyzeWasteImageWithGemini(
   const candidateModels = [
     process.env.GEMINI_MODEL || "gemini-3.8-flash",
     "gemini-3.8-flash",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash"
   ];
   // Deduplicate
   const modelsToTry = Array.from(new Set(candidateModels));
@@ -388,7 +389,8 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         ],
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          temperature: 0.1
         }
       });
 
@@ -403,8 +405,8 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         continue;
       }
 
-      if (parsed && (parsed.itemName || parsed.name)) {
-        let itemName = (parsed.itemName || parsed.name || "Scanned Waste Item").trim();
+      if (parsed && (parsed.itemName || parsed.name || parsed.item || parsed.title)) {
+        let itemName = (parsed.itemName || parsed.name || parsed.item || parsed.title || "Scanned Waste Item").trim();
         let universalStream = [
           "RECYCLABLE_CLEAN",
           "COMPOST_ORGANIC",
@@ -480,11 +482,8 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
       }
     } catch (err: any) {
       lastError = err;
-      // If 404 or model not found, try next candidate model
-      if (err?.message?.includes("404") || err?.message?.includes("NOT_FOUND") || err?.message?.includes("not available")) {
-        continue;
-      }
-      break;
+      console.warn(`[Gemini Vision] Model ${modelName} failed (${err?.status || err?.message || 'unknown error'}), trying next candidate model...`);
+      continue;
     }
   }
 

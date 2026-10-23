@@ -324,13 +324,35 @@ Respond ONLY with a valid JSON object matching this schema:
 
       contents.push({ text: textParts.join('\n') });
 
-      const response = await ai.models.generateContent({
-        model: env.GEMINI_MODEL,
-        contents,
-        config: {
-          responseMimeType: 'application/json'
+      const candidateModels = [
+        env.GEMINI_MODEL || 'gemini-3.8-flash',
+        'gemini-3.8-flash',
+        'gemini-flash-lite-latest',
+        'gemini-3.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash'
+      ];
+      const modelsToTry = Array.from(new Set(candidateModels));
+      let response: any = null;
+      let lastErr: any = null;
+      for (const m of modelsToTry) {
+        try {
+          response = await ai.models.generateContent({
+            model: m,
+            contents,
+            config: {
+              responseMimeType: 'application/json'
+            }
+          });
+          if (response && response.text) break;
+        } catch (e: any) {
+          lastErr = e;
+          continue;
         }
-      });
+      }
+      if (!response || !response.text) {
+        throw lastErr || new Error('All candidate Gemini models failed');
+      }
 
       const rawText = response.text || '{}';
       const parsedJson = JSON.parse(extractJsonFromText(rawText));
@@ -386,13 +408,35 @@ Return ONLY a JSON object conforming to:
 Document:
 ${formattedPages}`;
 
-    const response = await ai.models.generateContent({
-      model: env.GEMINI_MODEL,
-      contents: [{ text: prompt }],
-      config: {
-        responseMimeType: 'application/json'
+    const candidateModels = [
+        env.GEMINI_MODEL || 'gemini-3.8-flash',
+        'gemini-3.8-flash',
+        'gemini-flash-lite-latest',
+        'gemini-3.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash'
+      ];
+      const modelsToTry = Array.from(new Set(candidateModels));
+      let response: any = null;
+      let lastErr: any = null;
+      for (const m of modelsToTry) {
+        try {
+          response = await ai.models.generateContent({
+            model: m,
+            contents: [{ text: prompt }],
+            config: {
+              responseMimeType: 'application/json'
+            }
+          });
+          if (response && response.text) break;
+        } catch (e: any) {
+          lastErr = e;
+          continue;
+        }
       }
-    });
+      if (!response || !response.text) {
+        throw lastErr || new Error('All candidate Gemini models failed');
+      }
 
     const rawText = response.text || '{}';
     const parsedJson = JSON.parse(extractJsonFromText(rawText));
