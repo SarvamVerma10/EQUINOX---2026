@@ -1,0 +1,208 @@
+[
+  {
+    "id": "bm-01",
+    "description": "Standard takeaway hot coffee cup with plastic lid",
+    "expectedItem": "Coffee Cup",
+    "isMultiComponent": true,
+    "components": [
+      { "name": "Cup Body", "material": "Poly-coated Paperboard" },
+      { "name": "Lid", "material": "Polypropylene Plastic (#5)" }
+    ],
+    "expectedCategory": "Landfill / Residual Waste",
+    "testCase": "Mixed packaging decomposition"
+  },
+  {
+    "id": "bm-02",
+    "description": "Empty aluminum Coca-Cola soda can",
+    "expectedItem": "Aluminum Can",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Can Body", "material": "Aluminum" }
+    ],
+    "expectedCategory": "Recycling / Blue Bin",
+    "testCase": "Clear photograph / text description -> supported recommendation"
+  },
+  {
+    "id": "bm-03",
+    "description": "Greasy cardboard pizza box with food cheese residue",
+    "expectedItem": "Pizza Box",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Box", "material": "Greasy Cardboard" }
+    ],
+    "expectedCategory": "Organics / Green Bin",
+    "testCase": "Condition-dependent classification"
+  },
+  {
+    "id": "bm-04",
+    "description": "Clean corrugated cardboard shipping box from delivery",
+    "expectedItem": "Cardboard Box",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Box", "material": "Clean Corrugated Cardboard" }
+    ],
+    "expectedCategory": "Recycling / Blue Bin",
+    "testCase": "Clean paperboard recycling"
+  },
+  {
+    "id": "bm-05",
+    "description": "Clear plastic water bottle with screw cap attached",
+    "expectedItem": "Plastic Water Bottle",
+    "isMultiComponent": true,
+    "components": [
+      { "name": "Bottle", "material": "Polyethylene Terephthalate (#1 PET)" },
+      { "name": "Cap", "material": "High-Density Polyethylene (#2 HDPE)" }
+    ],
+    "expectedCategory": "Recycling / Blue Bin",
+    "testCase": "Multi-material bottle and cap"
+  },
+  {
+    "id": "bm-06",
+    "description": "Crinkly shiny metallic potato chip bag",
+    "expectedItem": "Potato Chip Bag",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Pouch", "material": "Multi-layer Metallized Plastic Film" }
+    ],
+    "expectedCategory": "Landfill / Residual Waste",
+    "testCase": "Metallized plastic pouch"
+  },
+  {
+    "id": "bm-07",
+    "description": "Used AA household alkaline battery",
+    "expectedItem": "Battery",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Cell", "material": "Alkaline" }
+    ],
+    "expectedCategory": "Hazardous Waste",
+    "testCase": "Hazardous curbside prohibition"
+  },
+  {
+    "id": "bm-08",
+    "description": "Styrofoam food takeout clamshell container",
+    "expectedItem": "Styrofoam Clamshell",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Clamshell", "material": "Expanded Polystyrene (EPS)" }
+    ],
+    "expectedCategory": "Landfill / Residual Waste",
+    "testCase": "Foam packaging landfill requirement"
+  },
+  {
+    "id": "bm-09",
+    "description": "Thin plastic grocery shopping bag",
+    "expectedItem": "Plastic Grocery Bag",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Bag", "material": "Low-Density Polyethylene (#4 LDPE Film)" }
+    ],
+    "expectedCategory": "Drop-off Only",
+    "testCase": "Film tangle hazard drop-off only"
+  },
+  {
+    "id": "bm-10",
+    "description": "Clear glass pickle jar with steel twist lid",
+    "expectedItem": "Glass Jar",
+    "isMultiComponent": true,
+    "components": [
+      { "name": "Jar", "material": "Glass" },
+      { "name": "Lid", "material": "Steel" }
+    ],
+    "expectedCategory": "Recycling / Blue Bin",
+    "testCase": "Glass container and metal closure"
+  },
+  {
+    "id": "bm-11",
+    "description": "Organic banana peel and leftover fruit scraps",
+    "expectedItem": "Banana Peel",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Peel", "material": "Food Scraps" }
+    ],
+    "expectedCategory": "Organics / Green Bin",
+    "testCase": "Compostable organic matter"
+  },
+  {
+    "id": "bm-12",
+    "description": "Indistinct blurry mystery pouch with no label",
+    "expectedItem": "Unknown Packaging",
+    "isMultiComponent": false,
+    "components": [],
+    "expectedCategory": null,
+    "expectedStatus": "clarification_required",
+    "testCase": "Ambiguous image -> clarification request"
+  },
+  {
+    "id": "bm-13",
+    "description": "Radioactive medical isotope container (unsupported item in municipal guide)",
+    "expectedItem": "Radioactive Waste",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Cylinder", "material": "Lead / Isotope" }
+    ],
+    "expectedCategory": null,
+    "expectedStatus": "no_supported_rule",
+    "testCase": "Missing rule -> no_supported_rule"
+  },
+  {
+    "id": "bm-14",
+    "description": "Ceramic coffee mug (shattered)",
+    "expectedItem": "Ceramic Mug",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Mug", "material": "Ceramic" }
+    ],
+    "expectedCategory": null,
+    "expectedStatus": "no_supported_rule",
+    "testCase": "Non-guide material rejection"
+  },
+  {
+    "id": "bm-15",
+    "description": "Plastic takeout cutlery labeled PLA Compostable plastic",
+    "expectedItem": "PLA Cutlery",
+    "isMultiComponent": false,
+    "components": [
+      { "name": "Fork", "material": "Polylactic Acid (PLA #7)" }
+    ],
+    "expectedCategory": null,
+    "expectedStatus": "no_supported_rule",
+    "testCase": "Bioplastic boundary validation"
+  },
+  {
+    "id": "bm-16",
+    "description": "Yogurt container tub with pull-off aluminum foil seal",
+    "expectedItem": "Yogurt Cup",
+    "isMultiComponent": true,
+    "components": [
+      { "name": "Tub", "material": "Polypropylene Plastic (#5)" },
+      { "name": "Foil Seal", "material": "Aluminum" }
+    ],
+    "expectedCategory": "Recycling / Blue Bin",
+    "testCase": "Tub and foil seal separation"
+  },
+  {
+    "id": "bm-17",
+    "description": "Padded bubble mailer with paper exterior and plastic bubble interior",
+    "expectedItem": "Bubble Mailer",
+    "isMultiComponent": true,
+    "components": [
+      { "name": "Outer Layer", "material": "Kraft Paper" },
+      { "name": "Inner Bubble", "material": "LDPE Plastic Film" }
+    ],
+    "expectedCategory": "Landfill / Residual Waste",
+    "testCase": "Bonded mixed multi-material packaging"
+  },
+  {
+    "id": "bm-18",
+    "description": "Glass beverage bottle with metal crown cap",
+    "expectedItem": "Glass Bottle",
+    "isMultiComponent": true,
+    "components": [
+      { "name": "Bottle", "material": "Glass" },
+      { "name": "Crown Cap", "material": "Steel" }
+    ],
+    "expectedCategory": "Recycling / Blue Bin",
+    "testCase": "Bottle and crown cap"
+  }
+]

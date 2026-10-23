@@ -1,0 +1,46 @@
+{
+  "name": "wastewise-backend",
+  "version": "1.0.0",
+  "description": "WasteWise Backend Engine - Evidence-grounded AI waste-sorting engine",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "dev:backend": "tsx watch src/server.ts",
+    "dev:frontend": "npm --prefix wastewise-fullstack/wastewise-fullstack run dev",
+    "build:frontend": "npm --prefix wastewise-fullstack/wastewise-fullstack run build",
+    "test": "vitest run",
+    "test:backend": "vitest run",
+    "test:frontend": "npm --prefix wastewise-fullstack/wastewise-fullstack test",
+    "test:all": "npm run test:backend && npm run test:frontend"
+  },
+  "keywords": ["waste-sorting", "gemini", "ai", "equinox"],
+  "author": "WasteWise Team",
+  "license": "ISC",
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.1.0",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.13.10",
+    "@types/pdf-parse": "^1.1.4",
+    "@types/supertest": "^6.0.2",
+    "@types/uuid": "^10.0.0",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  }
+}
