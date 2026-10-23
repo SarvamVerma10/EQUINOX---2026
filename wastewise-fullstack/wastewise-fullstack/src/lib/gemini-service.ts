@@ -329,14 +329,18 @@ export async function analyzeWasteImageWithGemini(
 
   // 1. Clean Base64: Strip data URL prefix and whitespace/newlines
   let cleanBase64 = base64Image;
-  const prefixMatch = base64Image.match(/^data:([a-zA-Z0-9/+-]+);base64,([\s\S]+)$/);
-  if (prefixMatch) {
-    if (prefixMatch[1]) mimeType = prefixMatch[1];
-    cleanBase64 = prefixMatch[2];
-  } else {
-    cleanBase64 = base64Image.replace(/^data:image\/[a-zA-Z0-9.+_-]+;base64,/, "");
+  if (base64Image.startsWith("data:")) {
+    const commaIndex = base64Image.indexOf(",");
+    if (commaIndex !== -1) {
+      const header = base64Image.substring(5, commaIndex);
+      const semiIndex = header.indexOf(";");
+      if (semiIndex !== -1) {
+        mimeType = header.substring(0, semiIndex);
+      }
+      cleanBase64 = base64Image.substring(commaIndex + 1);
+    }
   }
-  cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
+  cleanBase64 = cleanBase64.trim();
 
   // 2. Validate MIME type
   if (!mimeType || mimeType === "image/*" || mimeType === "image/jpg") {
@@ -345,16 +349,8 @@ export async function analyzeWasteImageWithGemini(
 
   const ai = new GoogleGenAI({ apiKey });
 
-  // 3. Multi-model resilience: Primary is gemini-3.8-flash
-  const candidateModels = [
-    process.env.GEMINI_MODEL || "gemini-3.8-flash",
-    "gemini-3.8-flash",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
-  ];
-  // Deduplicate
-  const modelsToTry = Array.from(new Set(candidateModels));
+  // 3. Direct execution: Primary is gemini-3.8-flash
+  const modelsToTry = [process.env.GEMINI_MODEL || "gemini-3.8-flash"];
 
   const promptText = `Analyze the visual pixels of this waste image as an expert municipal waste auditor.
 Follow the strict 3-step waste sorting contract:
@@ -388,7 +384,8 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         ],
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          temperature: 0.1,
         }
       });
 
@@ -488,6 +485,9 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
     }
   }
 
-  console.warn("Gemini vision API error, applying universal heuristic classification:", lastError?.message || lastError);
-  return fallbackUniversalExtraction(textOrRegionHint || "Scanned Waste Item");
+  if (textOrRegionHint && textOrRegionHint.trim().length > 0) {
+    return fallbackUniversalExtraction(textOrRegionHint.trim());
+  }
+  console.warn("Gemini vision API error:", lastError?.message || lastError);
+  throw new Error(lastError?.message || "Failed to identify item from image. Please try again.");
 }

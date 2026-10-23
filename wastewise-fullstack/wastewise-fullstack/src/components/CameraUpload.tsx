@@ -14,9 +14,9 @@ interface CameraUploadProps {
 }
 
 /**
- * Resizes and compresses an image Data URL on an HTML5 canvas to max 1024x1024 at JPEG quality 0.8
+ * Resizes and compresses an image Data URL on an HTML5 canvas to max 800x800 at JPEG quality 0.75
  */
-function compressImage(dataUrl: string, maxDimension = 1024, quality = 0.8): Promise<string> {
+function compressImage(dataUrl: string, maxDimension = 800, quality = 0.75): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -164,7 +164,7 @@ export const CameraUpload: React.FC<CameraUploadProps> = ({
   const processAndSubmitImage = async (dataUrl: string) => {
     try {
       onAnalysisStart();
-      const compressedDataUrl = await compressImage(dataUrl, 1024, 0.8);
+      const compressedDataUrl = await compressImage(dataUrl, 800, 0.75);
       setPreviewImage(compressedDataUrl);
 
       const result = await apiClient.analyzeImage(compressedDataUrl, { localityId });
@@ -190,7 +190,7 @@ export const CameraUpload: React.FC<CameraUploadProps> = ({
     const canvas = canvasRef.current || document.createElement('canvas');
     let width = video.videoWidth;
     let height = video.videoHeight;
-    const maxDim = 1024;
+    const maxDim = 800;
 
     if (width > maxDim || height > maxDim) {
       if (width > height) {
@@ -208,7 +208,7 @@ export const CameraUpload: React.FC<CameraUploadProps> = ({
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, width, height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
 
     stopCamera();
     await processAndSubmitImage(dataUrl);
