@@ -1,68 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeWasteImageWithGemini } from "@/lib/gemini-service";
+import { analyzeWasteImageWithGemini, fallbackUniversalExtraction } from "@/lib/gemini-service";
 
-const ALLOWED_MIME_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic"
-]);
-const MAX_BYTES = Number(process.env.MAX_IMAGE_UPLOAD_BYTES || 5 * 1024 * 1024);
+const MAX_BYTES = Number(process.env.MAX_IMAGE_UPLOAD_BYTES || 8 * 1024 * 1024);
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { imageBase64, mimeType = "image/jpeg", regionHint } = body || {};
+    const rawImage = body.imageBase64 || body.image || body.file;
+    const mimeType = body.mimeType || "image/jpeg";
+    const textQuery = body.textDescription || body.query || body.itemName || body.productNameHint || body.regionHint;
 
-    if (!imageBase64 || typeof imageBase64 !== "string") {
+    // If no image is provided, but a text query was submitted, analyze via universal extractor
+    if (!rawImage || typeof rawImage !== "string" || rawImage.trim().length === 0) {
+      if (textQuery && typeof textQuery === "string" && textQuery.trim().length > 0) {
+        const textResult = fallbackUniversalExtraction(textQuery.trim());
+        return NextResponse.json({
+          status: textResult.needsClarification ? "clarification_needed" : "identified",
+          item: {
+            name: textResult.itemName || textResult.name,
+            material: textResult.material,
+            components: textResult.components,
+            confidence: textResult.confidence,
+            universalStream: textResult.universalStream,
+            customPrepSteps: textResult.customPrepSteps
+          },
+          clarificationQuestion: textResult.clarificationQuestion,
+          reason: null
+        });
+      }
+
       return NextResponse.json(
-        { status: "error", reason: "Missing image payload. Please capture or select a valid photo." },
+        { status: "error", reason: "Missing image or text payload. Please capture a photo or enter an item description." },
         { status: 400 }
       );
     }
 
-    if (!ALLOWED_MIME_TYPES.has(mimeType)) {
-      return NextResponse.json(
-        { status: "error", reason: `Unsupported image type '${mimeType}'. Allowed: JPEG, PNG, WebP.` },
-        { status: 415 }
-      );
-    }
-
-    const approxBytes = Math.ceil((imageBase64.length * 3) / 4);
+    // Approx size check
+    const approxBytes = Math.ceil((rawImage.length * 3) / 4);
     if (approxBytes > MAX_BYTES) {
       return NextResponse.json(
-        { status: "error", reason: "Uploaded image exceeds the 5 MB safety limit. Please compress or retake." },
+        { status: "error", reason: "Uploaded image exceeds safety limit. Please retake or compress." },
         { status: 413 }
       );
     }
 
-    const identification = await analyzeWasteImageWithGemini(imageBase64, mimeType, regionHint);
+    const identification = await analyzeWasteImageWithGemini(rawImage, mimeType, textQuery);
 
     return NextResponse.json({
-      status: identification.components.length > 1 ? "clarification_needed" : "identified",
+      status: identification.needsClarification ? "clarification_needed" : "identified",
       item: {
-        name: identification.name,
+        name: identification.itemName || identification.name,
         material: identification.material,
         components: identification.components,
-        confidence: identification.confidence
+        confidence: identification.confidence,
+        universalStream: identification.universalStream,
+        customPrepSteps: identification.customPrepSteps
       },
-      detectedItems: identification.detectedItems || [],
       clarificationQuestion: identification.clarificationQuestion,
       reason: null
     });
   } catch (err: any) {
-    // Never pretend the AI call succeeded when it failed
+    console.error("Identify route error:", err);
     return NextResponse.json(
       {
         status: "error",
-        item: { name: "Unidentified item", material: "Unknown", components: [], confidence: "low" },
+        item: { name: "Unidentified Item", material: "Unknown", components: [], confidence: "low" },
         category: "unresolved",
         clarificationQuestion: null,
         instructions: [],
         evidence: null,
-        reason: err?.message || "AI identification service unavailable. You can retry, retake the photo, or search manually."
+        reason: err?.message || "AI identification service unavailable."
       },
-      { status: 503 }
+      { status: 500 }
     );
   }
 }

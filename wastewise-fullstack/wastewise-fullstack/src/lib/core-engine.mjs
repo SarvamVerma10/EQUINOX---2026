@@ -39,6 +39,7 @@ export const DEMO_CAMPUS_GUIDE = {
   rules: [
     {
       id: "rule-bio-1",
+      universalStreams: ["COMPOST_ORGANIC"],
       itemKeywords: ["banana peel", "fruit peel", "vegetable peel", "apple core", "food scraps", "cooked food", "tea leaves", "coffee grounds"],
       materialKeywords: ["organic", "plant matter", "food waste", "compostable biomass"],
       subtype: "food_and_kitchen_organic",
@@ -55,6 +56,7 @@ export const DEMO_CAMPUS_GUIDE = {
     },
     {
       id: "rule-dry-1",
+      universalStreams: ["RECYCLABLE_CLEAN"],
       itemKeywords: ["aluminum can", "soda can", "beverage can", "metal can", "tin can"],
       materialKeywords: ["aluminum", "metal", "tinplate"],
       subtype: "clean_metal_containers",
@@ -71,6 +73,7 @@ export const DEMO_CAMPUS_GUIDE = {
     },
     {
       id: "rule-dry-2",
+      universalStreams: ["RECYCLABLE_CLEAN"],
       itemKeywords: ["pet bottle", "water bottle", "plastic bottle", "shampoo bottle", "hdpe container", "corrugated cardboard", "cardboard box", "office paper"],
       materialKeywords: ["pet #1", "hdpe #2", "clean cardboard", "uncoated paper"],
       subtype: "clean_dry_packaging",
@@ -87,6 +90,7 @@ export const DEMO_CAMPUS_GUIDE = {
     },
     {
       id: "rule-dry-3",
+      universalStreams: ["SOFT_PLASTIC_SPECIAL", "RECYCLABLE_CLEAN"],
       itemKeywords: ["noodle outer wrapper", "plastic outer wrapper", "polypropylene wrapper", "dry snack wrapper"],
       materialKeywords: ["mono-layer polypropylene", "clean dry plastic film"],
       subtype: "clean_dry_plastic_wrapper",
@@ -103,6 +107,7 @@ export const DEMO_CAMPUS_GUIDE = {
     },
     {
       id: "rule-haz-1",
+      universalStreams: ["HAZARDOUS_EWASTE"],
       itemKeywords: ["aa battery", "aaa battery", "alkaline battery", "lithium battery", "button cell", "power bank", "rechargeable battery"],
       materialKeywords: ["alkaline cell", "lithium-ion", "heavy metal battery", "electrochemical cell"],
       subtype: "battery_and_accumulators",
@@ -119,6 +124,7 @@ export const DEMO_CAMPUS_GUIDE = {
     },
     {
       id: "rule-haz-2",
+      universalStreams: ["MEDICAL_SANITARY"],
       itemKeywords: ["syringe", "needle", "lancet", "used bandage", "medicine strip", "expired medicine", "thermometer", "biomedical waste"],
       materialKeywords: ["sharps", "clinical waste", "pharmaceutical", "biomedical material"],
       subtype: "biomedical_and_sharps",
@@ -135,6 +141,7 @@ export const DEMO_CAMPUS_GUIDE = {
     },
     {
       id: "rule-haz-3",
+      universalStreams: ["HAZARDOUS_EWASTE"],
       itemKeywords: ["circuit board", "broken charger", "usb cable", "earphones", "cfl bulb", "led bulb", "paint can", "pesticide bottle", "chemical container"],
       materialKeywords: ["electronic waste", "e-waste", "mercury lamp", "hazardous chemical container"],
       subtype: "ewaste_and_chemicals",
@@ -148,6 +155,57 @@ export const DEMO_CAMPUS_GUIDE = {
       section: "Section 5.2 — Electronic Waste (E-Waste) & Chemical Containers",
       excerpt: "Discarded chargers, cables, circuit boards, CFLs, and chemical/paint containers require segregated Hazardous / E-Waste handling through the Estates Office collection facility.",
       physicalBinNote: "Authorized Route: Estates Office E-Waste & Hazardous Facility"
+    },
+    {
+      id: "rule-textile-1",
+      universalStreams: ["TEXTILE_DONATION"],
+      itemKeywords: ["textile donation", "clean clothes", "old garment", "cotton clothing", "bedsheet"],
+      materialKeywords: ["cotton fabric", "polyester apparel", "woven textile"],
+      subtype: "textile_and_apparel",
+      category: "special_handling",
+      instructions: [
+        "Ensure garments and textiles are clean and dry before drop-off.",
+        "Donate wearable clothing to campus or municipal donation drives.",
+        "Drop damaged textiles at designated fiber-recovery collection kiosks."
+      ],
+      page: 18,
+      section: "Section 6.1 — Textiles & Apparel Recovery",
+      excerpt: "Wearable and reusable clothing, along with clean fabric scraps, should be directed to designated campus and municipal textile donation bins rather than curbside waste.",
+      physicalBinNote: "Authorized Route: Dedicated Campus Textile & Apparel Donation Bin"
+    },
+    {
+      id: "rule-inert-1",
+      universalStreams: ["CONSTRUCTION_INERT"],
+      itemKeywords: ["inert mineral waste", "demolition rubble", "brick fragments", "tile pieces", "stoneware scrap"],
+      materialKeywords: ["masonry", "inert mineral", "fired ceramic substrate"],
+      subtype: "inert_and_mineral",
+      category: "special_handling",
+      instructions: [
+        "Wrap any sharp or broken mineral/ceramic edges securely in heavy paper or cardboard to protect handlers.",
+        "Do NOT dispose in container glass recycling (different melting point contaminates the batch).",
+        "Drop off at designated municipal inert rubble and mineral collection depots."
+      ],
+      page: 20,
+      section: "Section 7.2 — Inert Mineral & Ceramic Materials",
+      excerpt: "Broken ceramics, tiles, and mineral rubble must be safely wrapped and brought to designated inert waste drop-off sites; do not mix with standard curbside container glass.",
+      physicalBinNote: "Authorized Route: Municipal Inert Rubble & Mineral Depository"
+    },
+    {
+      id: "rule-landfill-1",
+      universalStreams: ["RESIDUAL_LANDFILL"],
+      itemKeywords: ["unrecyclable composite", "non-recoverable residual", "heavily soiled packaging"],
+      materialKeywords: ["mixed composite material", "contaminated residual"],
+      subtype: "residual_landfill",
+      category: "special_handling",
+      instructions: [
+        "Double-bag contaminated or composite refuse to prevent odor and leakage.",
+        "Ensure no hazardous, battery, or biomedical items are mixed in.",
+        "Place in the designated Residual / General Landfill waste bin."
+      ],
+      page: 22,
+      section: "Section 8.1 — Non-Recyclable Residual Waste",
+      excerpt: "All non-recyclable composite packaging, heavily contaminated materials, and general non-hazardous waste must be segregated into the municipal Residual Landfill stream.",
+      physicalBinNote: "Local authority physical bin: Black / Gray Residual Waste Bin"
     }
   ]
 };
@@ -510,7 +568,7 @@ export function evaluateDisposalWithGuide({
     };
   }
 
-  // 6. Search active guide rules
+  // 6. Search active guide rules (Tier 1: Keyword & Material matching)
   const normName = targetName.toLowerCase().trim();
   const normMat = targetMaterial.toLowerCase().trim();
 
@@ -523,6 +581,19 @@ export function evaluateDisposalWithGuide({
     );
     return itemHit || (matHit && normName.length > 3 && (rule.itemKeywords || []).some((kw) => normMat.includes(kw.toLowerCase())));
   });
+
+  // Tier 2: Universal Stream Fallback (deterministic municipal rule matching when Tier 1 keyword has no match)
+  if (matchedRules.length === 0 && identification.universalStream) {
+    const stream = identification.universalStream;
+    const streamRule = activeGuide.rules.find((r) =>
+      (Array.isArray(r.universalStreams) && r.universalStreams.includes(stream)) ||
+      r.universalStream === stream ||
+      r.stream === stream
+    );
+    if (streamRule) {
+      matchedRules.push(streamRule);
+    }
+  }
 
   // 7. No matching rule found
   if (matchedRules.length === 0) {
@@ -586,6 +657,12 @@ export function evaluateDisposalWithGuide({
 
   // 9. Single verified category match!
   const bestRule = matchedRules[0];
+  const customPrep = Array.isArray(identification.customPrepSteps)
+    ? identification.customPrepSteps.filter((s) => typeof s === "string" && s.trim())
+    : [];
+  const baseInstructions = bestRule.instructions || [];
+  const combinedInstructions = [...new Set([...customPrep, ...baseInstructions])];
+
   return {
     status: "recommended",
     item: {
@@ -595,12 +672,13 @@ export function evaluateDisposalWithGuide({
       confidence: identification.confidence
     },
     category: bestRule.category,
+    universalStream: identification.universalStream || (bestRule.universalStreams && bestRule.universalStreams[0]) || null,
     subtype: bestRule.subtype || null,
     physicalBinNote: bestRule.physicalBinNote || null,
     isDemoGuide: Boolean(activeGuide.isDemo),
     clarificationQuestion: null,
     clarificationOptions: [],
-    instructions: bestRule.instructions || [],
+    instructions: combinedInstructions.length > 0 ? combinedInstructions : baseInstructions,
     evidence: {
       guideName: activeGuide.guideName,
       localityName: activeGuide.localityName,

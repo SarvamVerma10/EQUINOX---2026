@@ -67,6 +67,19 @@ export function resetSessionId(): string {
   return 'ssr-session-placeholder';
 }
 
+function fileToDataUrl(file: File | Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (typeof FileReader === 'undefined') {
+      resolve('');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (e) => reject(e);
+    reader.readAsDataURL(file);
+  });
+}
+
 export class WasteWiseApiClient {
   private baseUrl: string;
 
@@ -167,44 +180,198 @@ export class WasteWiseApiClient {
   }
 
   /**
-   * Analyze Image File: POST /api/v1/analyze (multipart/form-data)
+   * Direct calls to Next.js Vision & Universal Stream API (/api/identify)
    */
-  async analyzeImage(
-    file: File | Blob,
-    options?: { localityId?: string; productNameHint?: string; filename?: string }
-  ): Promise<AnalysisResponse> {
-    const formData = new FormData();
-    const filename = options?.filename || (file instanceof File ? file.name : 'captured_waste.jpg');
-    formData.append('file', file, filename);
-    formData.append('localityId', options?.localityId || 'metro-central');
-    if (options?.productNameHint) {
-      formData.append('productNameHint', options.productNameHint);
-    }
-
-    return this.request<AnalysisResponse>('/analyze', {
+  async identifyWaste(payload: {
+    imageBase64?: string;
+    image?: string;
+    mimeType?: string;
+    textDescription?: string;
+    productNameHint?: string;
+  }): Promise<any> {
+    const res = await fetch('/api/identify', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new WasteWiseApiError(
+        errData.reason || `Identify failed with status ${res.status}`,
+        'IDENTIFY_ERROR',
+        res.status
+      );
+    }
+    return res.json();
   }
 
   /**
-   * Analyze Text Query: POST /api/v1/analyze (application/json)
+   * Direct calls to Next.js Deterministic Municipal Guide Evaluator (/api/disposal)
+   */
+  async evaluateDisposal(payload: {
+    identification: any;
+    selectedComponent?: string | null;
+    customGuide?: any;
+  }): Promise<any> {
+    const res = await fetch('/api/disposal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new WasteWiseApiError(
+        errData.reason || `Disposal evaluation failed with status ${res.status}`,
+        'DISPOSAL_ERROR',
+        res.status
+      );
+    }
+    return res.json();
+  }
+
+  /**
+   * Analyze Image: Handles File, Blob, or base64 Data URL, sending exact JSON to /api/identify
+   * and evaluating against local guide rules (/api/disposal).
+   */
+  async analyzeImage(
+    file: File | Blob | string,
+    options?: { localityId?: string; productNameHint?: string; filename?: string }
+  ): Promise<AnalysisResponse> {
+    let dataUrl: string;
+    let mimeType = 'image/jpeg';
+
+    if (typeof file === 'string') {
+      dataUrl = file;
+      if (dataUrl.startsWith('data:')) {
+        const match = dataUrl.match(/^data:([^;]+);/);
+        if (match) mimeType = match[1];
+      }
+    } else {
+      mimeType = file.type || 'image/jpeg';
+      dataUrl = await fileToDataUrl(file);
+    }
+
+    // Call Next.js /api/identify route
+    const identifyRes = await this.identifyWaste({
+      imageBase64: dataUrl,
+      mimeType,
+      productNameHint: options?.productNameHint
+    });
+
+    const identifiedItem = identifyRes.item;
+
+    // Check if clarification is required
+    if (identifyRes.status === 'clarification_needed' || identifyRes.clarificationQuestion) {
+      return {
+        analysisId: `analysis_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        status: 'clarification_required',
+        item: {
+          name: identifiedItem?.name || 'Uncertain Item',
+          alternatives: [],
+          components: identifiedItem?.components || []
+        },
+        clarification: {
+          required: true,
+          questions: identifyRes.clarificationQuestion ? [identifyRes.clarificationQuestion] : []
+        },
+        recommendation: null,
+        evidence: []
+      };
+    }
+
+    // Evaluate disposal with municipal guide
+    const disposalRes = await this.evaluateDisposal({
+      identification: identifiedItem,
+      selectedComponent: null
+    });
+
+    return {
+      analysisId: `analysis_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      status: disposalRes.status === 'recommended' ? 'recommendation_ready' : 'no_supported_rule',
+      item: {
+        name: disposalRes.item?.name || identifiedItem?.name || 'Scanned Waste Item',
+        alternatives: [],
+        components: disposalRes.item?.components || identifiedItem?.components || []
+      },
+      clarification: {
+        required: disposalRes.status === 'clarification_needed',
+        questions: disposalRes.clarificationQuestion ? [disposalRes.clarificationQuestion] : []
+      },
+      recommendation: {
+        category: disposalRes.physicalBinNote || disposalRes.category,
+        instructions: disposalRes.instructions || [],
+        explanation: disposalRes.reason || `Verified municipal waste stream classification.`
+      },
+      evidence: disposalRes.evidence ? [{
+        ruleId: disposalRes.evidence.section || 'municipal-rule',
+        sourceExcerpt: disposalRes.evidence.excerpt || 'Official Municipal Waste Sorting Guideline.',
+        pageNumber: disposalRes.evidence.page || null,
+        sectionTitle: disposalRes.evidence.section || null
+      }] : []
+    };
+  }
+
+  /**
+   * Analyze Text Query: Evaluates text description against universal streams and municipal guide
    */
   async analyzeText(
     textDescription: string,
     options?: { localityId?: string; productNameHint?: string }
   ): Promise<AnalysisResponse> {
-    return this.request<AnalysisResponse>('/analyze', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        textDescription,
-        localityId: options?.localityId || 'metro-central',
-        productNameHint: options?.productNameHint
-      })
+    const identifyRes = await this.identifyWaste({
+      textDescription,
+      productNameHint: options?.productNameHint
     });
+
+    const identifiedItem = identifyRes.item;
+
+    if (identifyRes.status === 'clarification_needed' || identifyRes.clarificationQuestion) {
+      return {
+        analysisId: `analysis_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        status: 'clarification_required',
+        item: {
+          name: identifiedItem?.name || textDescription,
+          alternatives: [],
+          components: identifiedItem?.components || []
+        },
+        clarification: {
+          required: true,
+          questions: identifyRes.clarificationQuestion ? [identifyRes.clarificationQuestion] : []
+        },
+        recommendation: null,
+        evidence: []
+      };
+    }
+
+    const disposalRes = await this.evaluateDisposal({
+      identification: identifiedItem,
+      selectedComponent: null
+    });
+
+    return {
+      analysisId: `analysis_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      status: disposalRes.status === 'recommended' ? 'recommendation_ready' : 'no_supported_rule',
+      item: {
+        name: disposalRes.item?.name || identifiedItem?.name || textDescription,
+        alternatives: [],
+        components: disposalRes.item?.components || identifiedItem?.components || []
+      },
+      clarification: {
+        required: disposalRes.status === 'clarification_needed',
+        questions: disposalRes.clarificationQuestion ? [disposalRes.clarificationQuestion] : []
+      },
+      recommendation: {
+        category: disposalRes.physicalBinNote || disposalRes.category,
+        instructions: disposalRes.instructions || [],
+        explanation: disposalRes.reason || `Verified municipal waste stream classification.`
+      },
+      evidence: disposalRes.evidence ? [{
+        ruleId: disposalRes.evidence.section || 'municipal-rule',
+        sourceExcerpt: disposalRes.evidence.excerpt || 'Official Municipal Waste Sorting Guideline.',
+        pageNumber: disposalRes.evidence.page || null,
+        sectionTitle: disposalRes.evidence.section || null
+      }] : []
+    };
   }
 
   /**
