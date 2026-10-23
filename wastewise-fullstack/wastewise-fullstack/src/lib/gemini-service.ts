@@ -345,8 +345,16 @@ export async function analyzeWasteImageWithGemini(
 
   const ai = new GoogleGenAI({ apiKey });
 
-  // 3. Lock to a single fast model — no retry loop, no blocking delays
-  const modelsToTry = [process.env.GEMINI_MODEL || "gemini-2.5-flash"];
+  // 3. Multi-model resilience: Primary is gemini-3.8-flash
+  const candidateModels = [
+    process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    "gemini-3.8-flash",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
+  ];
+  // Deduplicate
+  const modelsToTry = Array.from(new Set(candidateModels));
 
   const promptText = `Analyze the visual pixels of this waste image as an expert municipal waste auditor.
 Follow the strict 3-step waste sorting contract:
@@ -380,11 +388,7 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         ],
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
-          responseMimeType: "application/json",
-          temperature: 0.1,
-          thinkingConfig: {
-            thinkingBudget: 0
-          }
+          responseMimeType: "application/json"
         }
       });
 
