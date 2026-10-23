@@ -64,10 +64,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         status: "error",
-        error: {
-          code: "VISION_ERROR",
-          message: err?.message || "AI identification service timed out or unavailable."
-        },
         item: { name: "Unidentified Item", material: "Unknown", components: [], confidence: "low" },
         category: "unresolved",
         clarificationQuestion: null,
