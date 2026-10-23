@@ -289,18 +289,16 @@ export function fallbackUniversalExtraction(queryOrHint: string): Identification
 }
 
 /**
- * Cached singleton GoogleGenAI client & API key to eliminate file system overhead on hot paths
+ * Universal Gemini Multimodal Vision Extraction
  */
-let cachedApiKey: string | null = null;
-let cachedAiClient: GoogleGenAI | null = null;
-
-function getCachedAiClient(): { ai: GoogleGenAI | null; apiKey: string | null } {
-  if (cachedAiClient && cachedApiKey) {
-    return { ai: cachedAiClient, apiKey: cachedApiKey };
-  }
-
+export async function analyzeWasteImageWithGemini(
+  base64Image: string,
+  mimeType: string,
+  textOrRegionHint?: string
+): Promise<IdentificationResult> {
   let apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
+  // Fallback: If not found in process.env, check root .env file directly
   if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey.length < 10) {
     try {
       const fs = require("fs");
@@ -324,43 +322,19 @@ function getCachedAiClient(): { ai: GoogleGenAI | null; apiKey: string | null } 
     } catch {}
   }
 
-  if (apiKey && apiKey.length > 10 && !apiKey.startsWith("dummy") && apiKey !== "YOUR_GEMINI_API_KEY_HERE") {
-    cachedApiKey = apiKey;
-    cachedAiClient = new GoogleGenAI({ apiKey });
-    return { ai: cachedAiClient, apiKey };
-  }
-
-  return { ai: null, apiKey: null };
-}
-
-/**
- * Universal Gemini Multimodal Vision Extraction
- */
-export async function analyzeWasteImageWithGemini(
-  base64Image: string,
-  mimeType: string,
-  textOrRegionHint?: string
-): Promise<IdentificationResult> {
-  const { ai, apiKey } = getCachedAiClient();
-
-  // Fast offline extraction if no valid API key
-  if (!ai || !apiKey) {
+  // Fallback to offline extraction if still no valid API key
+  if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey.startsWith("dummy") || apiKey.length < 10) {
     return fallbackUniversalExtraction(textOrRegionHint || "Scanned Waste Item");
   }
 
-  // 1. Fast Base64 Stripping without heavy regex
+  // 1. Clean Base64: Strip data URL prefix and whitespace/newlines
   let cleanBase64 = base64Image;
-  const commaIdx = cleanBase64.indexOf(",");
-  if (commaIdx !== -1 && commaIdx < 100) {
-    const meta = cleanBase64.substring(0, commaIdx);
-    cleanBase64 = cleanBase64.substring(commaIdx + 1);
-    const colonIdx = meta.indexOf(":");
-    const semiIdx = meta.indexOf(";");
-    if (colonIdx !== -1 && semiIdx !== -1) {
-      mimeType = meta.substring(colonIdx + 1, semiIdx).trim();
-    }
+  const prefixMatch = base64Image.match(/^data:([a-zA-Z0-9/+-]+);base64,([\s\S]+)$/);
+  if (prefixMatch) {
+    if (prefixMatch[1]) mimeType = prefixMatch[1];
+    cleanBase64 = prefixMatch[2];
   } else {
-    cleanBase64 = cleanBase64.replace(/^data:[^;]+;base64,/, "");
+    cleanBase64 = base64Image.replace(/^data:image\/[a-zA-Z0-9.+_-]+;base64,/, "");
   }
   cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
 
@@ -369,9 +343,18 @@ export async function analyzeWasteImageWithGemini(
     mimeType = "image/jpeg";
   }
 
-  // 3. Multi-model resilience: Primary is gemini-3.8-flash, backup is gemini-2.0-flash
-  const primaryModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  const modelsToTry = [primaryModel, "gemini-2.0-flash"].filter((m, i, arr) => arr.indexOf(m) === i);
+  const ai = new GoogleGenAI({ apiKey });
+
+  // 3. Multi-model resilience: Primary is gemini-3.8-flash
+  const candidateModels = [
+    process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    "gemini-3.8-flash",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
+  ];
+  // Deduplicate
+  const modelsToTry = Array.from(new Set(candidateModels));
 
   const promptText = `Analyze the visual pixels of this waste image as an expert municipal waste auditor.
 Follow the strict 3-step waste sorting contract:
@@ -405,9 +388,7 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         ],
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
-          responseMimeType: "application/json",
-          temperature: 0.1,
-          maxOutputTokens: 512
+          responseMimeType: "application/json"
         }
       });
 
@@ -423,7 +404,7 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
       }
 
       if (parsed && (parsed.itemName || parsed.name)) {
-        let itemName = String(parsed.itemName || parsed.name || "Scanned Waste Item").trim();
+        let itemName = (parsed.itemName || parsed.name || "Scanned Waste Item").trim();
         let universalStream = [
           "RECYCLABLE_CLEAN",
           "COMPOST_ORGANIC",
@@ -499,13 +480,14 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
       }
     } catch (err: any) {
       lastError = err;
-      if (err && err.message && (err.message.includes("404") || err.message.includes("NOT_FOUND") || err.message.includes("not available"))) {
+      // If 404 or model not found, try next candidate model
+      if (err?.message?.includes("404") || err?.message?.includes("NOT_FOUND") || err?.message?.includes("not available")) {
         continue;
       }
       break;
     }
   }
 
-  // Graceful fallback to heuristic extraction
+  console.warn("Gemini vision API error, applying universal heuristic classification:", lastError?.message || lastError);
   return fallbackUniversalExtraction(textOrRegionHint || "Scanned Waste Item");
 }
