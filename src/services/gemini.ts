@@ -328,7 +328,9 @@ Respond ONLY with a valid JSON object matching this schema:
         model: env.GEMINI_MODEL,
         contents,
         config: {
-          responseMimeType: 'application/json'
+          responseMimeType: 'application/json',
+          temperature: 0.1,
+          maxOutputTokens: 512
         }
       });
 

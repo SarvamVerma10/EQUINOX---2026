@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { geminiService } from '../services/gemini.js';
 import { ruleEngine } from '../services/ruleEngine.js';
-import { dbService } from '../services/firestore.js';
+import { dbService, inMemoryDb } from '../services/firestore.js';
 import { clarifyRequestSchema, correctionRequestSchema } from '../types/schemas.js';
 import type {
   AnalysisRecord,
@@ -92,7 +92,8 @@ export async function analyzeItem(req: Request, res: Response, next: NextFunctio
         createdAt: new Date().toISOString()
       };
 
-      await dbService.saveAnalysis(analysisRecord);
+      inMemoryDb.analyses.set(analysisRecord.analysisId, analysisRecord);
+      Promise.resolve().then(() => dbService.saveAnalysis(analysisRecord)).catch(() => {});
 
       res.status(200).json({
         analysisId: analysisRecord.analysisId,
@@ -139,8 +140,6 @@ export async function analyzeItem(req: Request, res: Response, next: NextFunctio
       createdAt: new Date().toISOString()
     };
 
-    await dbService.saveAnalysis(analysisRecord);
-
     // Auto-cache snapshot in disposalHistory
     const historyRecord: DisposalHistoryRecord = {
       historyId: uuidv4(),
@@ -151,7 +150,17 @@ export async function analyzeItem(req: Request, res: Response, next: NextFunctio
       evidenceSnapshot: analysisRecord.evidence,
       timestamp: new Date().toISOString()
     };
-    await dbService.saveHistory(historyRecord);
+
+    inMemoryDb.analyses.set(analysisRecord.analysisId, analysisRecord);
+    inMemoryDb.disposalHistory.set(historyRecord.historyId, historyRecord);
+
+    // Async fire-and-forget background persistence so response returns immediately
+    Promise.resolve().then(async () => {
+      try {
+        await dbService.saveAnalysis(analysisRecord);
+        await dbService.saveHistory(historyRecord);
+      } catch (bgErr) {}
+    });
 
     res.status(200).json({
       analysisId: analysisRecord.analysisId,
@@ -236,10 +245,8 @@ export async function clarifyAnalysis(req: Request, res: Response, next: NextFun
     analysis.uncertaintyNotes = evalResult.uncertaintyNotes;
     analysis.requiresHumanReview = evalResult.requiresHumanReview;
 
-    await dbService.saveAnalysis(analysis);
-
     // Save updated snapshot in history
-    await dbService.saveHistory({
+    const updatedHistory: DisposalHistoryRecord = {
       historyId: uuidv4(),
       sessionId: sessionId!,
       analysisId: analysis.analysisId,
@@ -247,6 +254,17 @@ export async function clarifyAnalysis(req: Request, res: Response, next: NextFun
       recommendationSnapshot: (analysis.recommendation as unknown as Record<string, unknown>) || {},
       evidenceSnapshot: analysis.evidence,
       timestamp: new Date().toISOString()
+    };
+
+    inMemoryDb.analyses.set(analysis.analysisId, analysis);
+    inMemoryDb.disposalHistory.set(updatedHistory.historyId, updatedHistory);
+
+    // Async fire-and-forget background persistence
+    Promise.resolve().then(async () => {
+      try {
+        await dbService.saveAnalysis(analysis);
+        await dbService.saveHistory(updatedHistory);
+      } catch (e) {}
     });
 
     res.status(200).json({
@@ -347,8 +365,6 @@ export async function submitCorrection(req: Request, res: Response, next: NextFu
     analysis.uncertaintyNotes = evalResult.uncertaintyNotes;
     analysis.requiresHumanReview = evalResult.requiresHumanReview;
 
-    await dbService.saveAnalysis(analysis);
-
     // Save correction audit trail
     const correctionRecord: CorrectionRecord = {
       correctionId: uuidv4(),
@@ -359,10 +375,8 @@ export async function submitCorrection(req: Request, res: Response, next: NextFu
       reEvaluatedRecommendation: (evalResult.recommendation as unknown as Record<string, unknown>) || {},
       timestamp: new Date().toISOString()
     };
-    await dbService.saveCorrection(correctionRecord);
 
-    // Save updated history record
-    await dbService.saveHistory({
+    const correctionHistory: DisposalHistoryRecord = {
       historyId: uuidv4(),
       sessionId,
       analysisId: analysis.analysisId,
@@ -370,6 +384,19 @@ export async function submitCorrection(req: Request, res: Response, next: NextFu
       recommendationSnapshot: (analysis.recommendation as unknown as Record<string, unknown>) || {},
       evidenceSnapshot: analysis.evidence,
       timestamp: new Date().toISOString()
+    };
+
+    inMemoryDb.analyses.set(analysis.analysisId, analysis);
+    inMemoryDb.corrections.set(correctionRecord.correctionId, correctionRecord);
+    inMemoryDb.disposalHistory.set(correctionHistory.historyId, correctionHistory);
+
+    // Async fire-and-forget background persistence
+    Promise.resolve().then(async () => {
+      try {
+        await dbService.saveAnalysis(analysis);
+        await dbService.saveCorrection(correctionRecord);
+        await dbService.saveHistory(correctionHistory);
+      } catch (e) {}
     });
 
     res.status(200).json({
