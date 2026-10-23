@@ -1,13 +1,13 @@
 /**
- * WasteWise Service Worker
+ * WasteWise Service Worker (v2)
  * Strategy:
  *   - App shell (HTML, icons, bridge JS) → Cache-first
- *   - API calls (/api/*) → Network-first with 10s timeout, no caching
  *   - Google Fonts / CDN assets → Stale-while-revalidate
- *   - Everything else → Network-first
+ *   - NEVER intercept POST / PUT / non-GET requests
+ *   - NEVER intercept /api/* routes (leave directly to native network)
  */
 
-const CACHE_NAME = 'wastewise-v1';
+const CACHE_NAME = 'wastewise-v2';
 const OFFLINE_URL = '/wastewise.html';
 
 /** Files to pre-cache on SW install */
@@ -26,7 +26,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_URLS).catch((err) => {
-        // Non-fatal: some files may not exist in dev
         console.warn('[SW] Pre-cache partial failure:', err);
       });
     }).then(() => self.skipWaiting())
@@ -54,18 +53,26 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+
+  // 1. NEVER intercept non-GET requests (e.g. POST /api/identify, /api/disposal, image uploads)
+  // Let browser handle non-GET natively without any Service Worker interference
+  if (request.method !== 'GET') {
+    return;
+  }
+
   const url = new URL(request.url);
 
-  // Only handle same-origin + Google Fonts CDN
+  // 2. NEVER intercept API routes (/api/*) — dynamic backend data must go straight to server
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // 3. Only handle same-origin or known external CDNs
   const isSameOrigin = url.origin === self.location.origin;
   const isGoogleFonts = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   const isTailwindCDN = url.hostname === 'cdn.tailwindcss.com';
 
-  if (!isSameOrigin && !isGoogleFonts && !isTailwindCDN) return;
-
-  // ── API calls: network-first, never cache ──
-  if (isSameOrigin && url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirst(request, /* useCache */ false));
+  if (!isSameOrigin && !isGoogleFonts && !isTailwindCDN) {
     return;
   }
 
@@ -75,7 +82,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Navigation requests: serve app shell ──
+  // ── Navigation requests: serve app shell / offline fallback ──
   if (request.mode === 'navigate') {
     event.respondWith(
       cacheFirst(request).catch(() => caches.match(OFFLINE_URL))
@@ -89,7 +96,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Everything else: network-first ──
+  // ── Other GET requests: network-first ──
   event.respondWith(networkFirst(request, /* useCache */ true));
 });
 
@@ -111,20 +118,16 @@ async function cacheFirst(request) {
   }
 }
 
-/** Network-first: try network with 10s timeout, fall back to cache */
+/** Network-first for static GET requests */
 async function networkFirst(request, useCache = true) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(request, { signal: controller.signal });
-    clearTimeout(timeout);
+    const response = await fetch(request);
     if (useCache && response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
-    clearTimeout(timeout);
     if (useCache) {
       const cached = await caches.match(request);
       if (cached) return cached;
@@ -163,7 +166,7 @@ function isStaticAsset(pathname) {
   );
 }
 
-// ─── Push Notifications (future-ready placeholder) ──────────────────────────
+// ─── Push Notifications ─────────────────────────────────────────────────────
 
 self.addEventListener('push', (event) => {
   if (!event.data) return;

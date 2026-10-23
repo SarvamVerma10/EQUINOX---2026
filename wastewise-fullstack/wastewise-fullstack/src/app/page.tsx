@@ -25,6 +25,29 @@ interface ReferenceMessage {
 
 const frameUrl = '/wastewise.html';
 
+/**
+ * Robustly converts a Base64 data URL to a binary Blob in-memory.
+ * Avoids browser fetch(dataUrl) which can fail with "Failed to fetch" on large image payloads.
+ */
+function dataUrlToBlob(dataUrl: string): Blob {
+  try {
+    const parts = dataUrl.split(',');
+    const mimeMatch = parts[0]?.match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const b64 = parts[1] || '';
+    const binary = atob(b64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: mime });
+  } catch (err) {
+    console.error('Failed to convert dataUrl to Blob:', err);
+    throw new Error('The captured photo could not be prepared for analysis.');
+  }
+}
+
 export default function WasteWisePage() {
   const cameraRef = useRef<CameraUploadHandle>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -68,9 +91,7 @@ export default function WasteWisePage() {
   const runImageAnalysis = useCallback(async (dataUrl: string, filename: string) => {
     if (busyRef.current) return;
     try {
-      const response = await fetch(dataUrl);
-      if (!response.ok) throw new Error('The captured photo could not be prepared for analysis.');
-      const blob = await response.blob();
+      const blob = dataUrlToBlob(dataUrl);
       const image = new File([blob], filename || 'wastewise-photo.jpg', {
         type: blob.type || 'image/jpeg'
       });
@@ -242,7 +263,7 @@ export default function WasteWisePage() {
       >
         <CameraUpload
           ref={cameraRef}
-          localityId="WasteWise"
+          localityId="metro-central"
           onAnalysisStart={() => {
             busyRef.current = true;
             setBusy(true);
