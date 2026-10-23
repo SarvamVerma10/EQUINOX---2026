@@ -56,11 +56,28 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const rawCategory = recommendation?.category || '';
   const rawItemName = item?.name || 'Scanned Waste Item';
   const rawExplanation = recommendation?.explanation || '';
+  const directStream = (item as any)?.universalStream || (recommendation as any)?.universalStream;
   const searchCorpus = `${rawCategory} ${rawItemName} ${rawExplanation} ${(item.components || []).map(c => `${c.name} ${c.material}`).join(' ')}`.toLowerCase();
 
   const getStreamTheme = (): StreamTheme => {
-    // 1. Hazardous & E-Waste (High Priority Safety Lock)
-    if (/battery|lithium|32700|cell|e-waste|electronic|charger|circuit|cable|chemical|hazard/i.test(searchCorpus)) {
+    // 1. Organic & Compost (PRIORITY LOCK: Banana peels and food scraps are NEVER recyclable)
+    if (directStream === 'COMPOST_ORGANIC' || /banana|peel|fruit|apple|vegetable|food scrap|kitchen waste|organic|compost|wet waste/i.test(searchCorpus)) {
+      return {
+        badgeLabel: 'COMPOST & ORGANICS',
+        badgeBg: 'bg-emerald-600',
+        badgeText: 'text-white',
+        cardBg: 'bg-emerald-50/70',
+        cardBorder: 'border-emerald-200',
+        iconBg: 'bg-emerald-600',
+        titleColor: 'text-emerald-950',
+        binTitle: 'Green Municipal Wet / Organics Bin',
+        binSubtitle: 'Biodegradable kitchen trimmings, fruit peels, and compostable organic biomass.',
+        icon: Apple
+      };
+    }
+
+    // 2. Hazardous & E-Waste (PRIORITY SAFETY LOCK: Batteries are NEVER recyclable)
+    if (directStream === 'HAZARDOUS_EWASTE' || /battery|lithium|32700|cell|e-waste|electronic|charger|circuit|cable|chemical|hazard/i.test(searchCorpus)) {
       return {
         badgeLabel: 'HAZARDOUS E-WASTE',
         badgeBg: 'bg-red-600',
@@ -75,24 +92,8 @@ export const ResultCard: React.FC<ResultCardProps> = ({
       };
     }
 
-    // 2. Organic / Compost
-    if (/organic|compost|biodegradable|wet waste|food|banana|fruit|peel|vegetable|kitchen/i.test(searchCorpus)) {
-      return {
-        badgeLabel: 'COMPOST & ORGANICS',
-        badgeBg: 'bg-emerald-600',
-        badgeText: 'text-white',
-        cardBg: 'bg-emerald-50/70',
-        cardBorder: 'border-emerald-200',
-        iconBg: 'bg-emerald-600',
-        titleColor: 'text-emerald-950',
-        binTitle: 'Green Municipal Wet / Organics Bin',
-        binSubtitle: 'Biodegradable kitchen trimmings, food scraps, and certified compostable materials.',
-        icon: Apple
-      };
-    }
-
     // 3. Medical & Sanitary
-    if (/medical|sanitary|blister|pill|pharmaceutical|syringe|needle|sharps|bandage/i.test(searchCorpus)) {
+    if (directStream === 'MEDICAL_SANITARY' || /medical|sanitary|blister|pill|pharmaceutical|syringe|needle|sharps|bandage/i.test(searchCorpus)) {
       return {
         badgeLabel: 'MEDICAL & SANITARY SAFE',
         badgeBg: 'bg-amber-600',
@@ -108,7 +109,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     }
 
     // 4. Textiles & Apparel
-    if (/textile|clothing|shirt|garment|apparel|fabric|cotton|linen/i.test(searchCorpus)) {
+    if (directStream === 'TEXTILE_DONATION' || /textile|clothing|shirt|garment|apparel|fabric|cotton|linen/i.test(searchCorpus)) {
       return {
         badgeLabel: 'TEXTILE RECOVERY & DONATION',
         badgeBg: 'bg-indigo-600',
@@ -124,7 +125,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     }
 
     // 5. Inert Mineral & Ceramics
-    if (/inert|ceramic|mug|dish|porcelain|stoneware|rubble|tile|brick/i.test(searchCorpus)) {
+    if (directStream === 'CONSTRUCTION_INERT' || /inert|ceramic|mug|dish|porcelain|stoneware|rubble|tile|brick/i.test(searchCorpus)) {
       return {
         badgeLabel: 'INERT MINERAL & CERAMICS',
         badgeBg: 'bg-stone-700',
@@ -140,7 +141,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     }
 
     // 6. Soft Plastics
-    if (/soft plastic|film|wrapper|polythene|pouch|bubble wrap|plastic bag/i.test(searchCorpus)) {
+    if (directStream === 'SOFT_PLASTIC_SPECIAL' || /soft plastic|film|wrapper|polythene|pouch|bubble wrap|plastic bag/i.test(searchCorpus)) {
       return {
         badgeLabel: 'SOFT PLASTICS SPECIAL RECOVERY',
         badgeBg: 'bg-teal-600',
@@ -156,7 +157,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
     }
 
     // 7. Clean Recyclables (Rigid plastic, metal cans, glass jars, clean paper/cardboard)
-    if (/recycl|blue bin|aluminum|can|tin|pet|bottle|cardboard|paper|glass jar/i.test(searchCorpus)) {
+    if (directStream === 'RECYCLABLE_CLEAN' || /recycl|blue bin|aluminum|can|tin|pet|bottle|cardboard|paper|glass jar/i.test(searchCorpus)) {
       return {
         badgeLabel: 'CLEAN DRY RECYCLABLE',
         badgeBg: 'bg-blue-600',

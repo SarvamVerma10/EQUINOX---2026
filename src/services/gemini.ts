@@ -215,8 +215,8 @@ function fallbackGroundedEvaluation(params: {
     ...(userClarifications ? userClarifications.map((u) => u.answer.toLowerCase()) : [])
   ];
 
-  let bestRule: RuleChunkRecord = candidateRules[0];
-  let bestScore = -1;
+  let bestRule: RuleChunkRecord | null = null;
+  let bestScore = 0;
 
   for (const rule of candidateRules) {
     let score = 0;
@@ -235,7 +235,7 @@ function fallbackGroundedEvaluation(params: {
   }
 
   // If score is 0 and item doesn't relate to the rule, return no_supported_rule
-  if (bestScore <= 0) {
+  if (bestScore <= 0 || !bestRule) {
     return {
       category: null,
       instructions: [],

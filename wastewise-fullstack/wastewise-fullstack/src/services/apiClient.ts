@@ -291,8 +291,9 @@ export class WasteWiseApiClient {
       item: {
         name: disposalRes.item?.name || identifiedItem?.name || 'Scanned Waste Item',
         alternatives: [],
-        components: disposalRes.item?.components || identifiedItem?.components || []
-      },
+        components: disposalRes.item?.components || identifiedItem?.components || [],
+        universalStream: disposalRes.universalStream || identifiedItem?.universalStream
+      } as any,
       clarification: {
         required: disposalRes.status === 'clarification_needed',
         questions: disposalRes.clarificationQuestion ? [disposalRes.clarificationQuestion] : []
@@ -300,8 +301,9 @@ export class WasteWiseApiClient {
       recommendation: {
         category: disposalRes.physicalBinNote || disposalRes.category,
         instructions: disposalRes.instructions || [],
-        explanation: disposalRes.reason || `Verified municipal waste stream classification.`
-      },
+        explanation: disposalRes.reason || `Verified municipal waste stream classification.`,
+        universalStream: disposalRes.universalStream || identifiedItem?.universalStream
+      } as any,
       evidence: disposalRes.evidence ? [{
         ruleId: disposalRes.evidence.section || 'municipal-rule',
         sourceExcerpt: disposalRes.evidence.excerpt || 'Official Municipal Waste Sorting Guideline.',
@@ -332,8 +334,9 @@ export class WasteWiseApiClient {
         item: {
           name: identifiedItem?.name || textDescription,
           alternatives: [],
-          components: identifiedItem?.components || []
-        },
+          components: identifiedItem?.components || [],
+          universalStream: identifiedItem?.universalStream
+        } as any,
         clarification: {
           required: true,
           questions: identifyRes.clarificationQuestion ? [identifyRes.clarificationQuestion] : []
@@ -354,8 +357,9 @@ export class WasteWiseApiClient {
       item: {
         name: disposalRes.item?.name || identifiedItem?.name || textDescription,
         alternatives: [],
-        components: disposalRes.item?.components || identifiedItem?.components || []
-      },
+        components: disposalRes.item?.components || identifiedItem?.components || [],
+        universalStream: disposalRes.universalStream || identifiedItem?.universalStream
+      } as any,
       clarification: {
         required: disposalRes.status === 'clarification_needed',
         questions: disposalRes.clarificationQuestion ? [disposalRes.clarificationQuestion] : []
@@ -363,8 +367,9 @@ export class WasteWiseApiClient {
       recommendation: {
         category: disposalRes.physicalBinNote || disposalRes.category,
         instructions: disposalRes.instructions || [],
-        explanation: disposalRes.reason || `Verified municipal waste stream classification.`
-      },
+        explanation: disposalRes.reason || `Verified municipal waste stream classification.`,
+        universalStream: disposalRes.universalStream || identifiedItem?.universalStream
+      } as any,
       evidence: disposalRes.evidence ? [{
         ruleId: disposalRes.evidence.section || 'municipal-rule',
         sourceExcerpt: disposalRes.evidence.excerpt || 'Official Municipal Waste Sorting Guideline.',

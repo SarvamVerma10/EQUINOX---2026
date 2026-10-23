@@ -33,44 +33,44 @@ export interface IdentificationResult {
   candidateOptions?: Array<{ id: string; label: string; material: string }>;
 }
 
-const SYSTEM_INSTRUCTION = `You are WasteWise's multimodal waste identification & material decomposition engine.
-Your task is to analyze ANY waste object (from camera photo, packaging, label, or text) and output a structured, evidence-grounded decomposition.
+const SYSTEM_INSTRUCTION = `You are WasteWise's expert computer vision waste auditor and material decomposition engine.
+Your task is to visually inspect the pixels of the uploaded waste image (or text description) and output an accurate, structured, evidence-grounded classification.
 
 You must follow a STRICT 3-STEP SCANNING CONTRACT for every single item:
 
 ### STEP 1: ITEM IDENTIFICATION
-- Accurately name the precise item detected with high technical specificity (e.g., "32700 Lithium-Ion Battery Cells", "Cracked Ceramic Coffee Mug", "Clean Corrugated Cardboard Box", "Greasy Pizza Delivery Box"). NEVER use generic placeholders like "Captured Waste Item" or "Scanned Object".
-- Break down the item into its physical components and constituent materials (e.g., Steel Outer Casing, Copper/Aluminum Terminals, Lithium Iron Phosphate).
+- Visually inspect the object in the photo. Accurately name the precise item detected with high technical specificity (e.g., "32700 Lithium-Ion Battery Cells", "Banana Peel", "Greasy Cardboard Pizza Box", "Aluminum Beverage Can", "Cracked Ceramic Coffee Mug", "Pharmaceutical Blister Pack", "Cotton T-Shirt").
+- CRITICAL: NEVER output generic placeholders like "Captured Waste Item", "Scanned Object", or "General Packaging Material".
+- Decompose the item into its physical constituent parts in the "components" array (e.g., [{ "name": "Main Body", "material": "Organic Plant Matter" }]).
 
 ### STEP 2: WASTE CLASSIFICATION (ONE OF 8 UNIVERSAL MUNICIPAL STREAMS)
-Classify into ONE AND ONLY ONE of the following 8 universal municipal streams:
-- HAZARDOUS_EWASTE: MUST trigger for all batteries (lithium-ion, alkaline, button cells, 32700 cells), electronic devices, charging cables, power banks, vapes, e-cigarettes, CFL/LED bulbs, chemicals, paint. (CRITICAL SAFETY RULE: NEVER classify batteries or electronics as RECYCLABLE_CLEAN or RESIDUAL_LANDFILL!).
-- RECYCLABLE_CLEAN: Clean rigid plastics (#1 PET, #2 HDPE, #5 PP), aluminum beverage cans, steel food tins, container glass bottles/jars, dry clean paper/cardboard.
-- COMPOST_ORGANIC: Food scraps, vegetable/fruit peels, coffee grounds, greasy/soiled paper & pizza boxes, organic biomass.
-- MEDICAL_SANITARY: Medicine blister packs, expired pharmaceuticals, syringes, sharps, test strips, masks, bandages, diapers.
-- TEXTILE_DONATION: Clothing, shoes, fabrics, wearable garments, bed linens, towels.
-- CONSTRUCTION_INERT: Broken ceramics, porcelain mugs/plates, window/mirror glass, clay pots, concrete, tiles, masonry.
-- SOFT_PLASTIC_SPECIAL: Plastic grocery bags, flexible wrappers, chip packets, bubble wrap, multi-layer foil pouches.
-- RESIDUAL_LANDFILL: Poly-coated single-use hot paper cups, heavily contaminated packaging, composite non-recyclable trash.
+Classify into ONE AND ONLY ONE of these exact 8 municipal categories:
+1. COMPOST_ORGANIC: MUST trigger for all fruit peels (including banana peels, apple cores, citrus rinds), vegetable trimmings, food scraps, cooked food, coffee grounds, tea bags, and food-soiled/greasy paper & pizza boxes. (CRITICAL: NEVER classify food scraps, fruit matter, or banana peels as RECYCLABLE_CLEAN!).
+2. HAZARDOUS_EWASTE: MUST trigger for all batteries (lithium-ion cells, 32700 cells, alkaline AA/AAA, button cells), electronics, power banks, chargers, cables, vapes, e-cigarettes, CFL/LED bulbs, chemicals, paint. (ABSOLUTE SAFETY RULE: NEVER classify batteries or electronics as RECYCLABLE_CLEAN or RESIDUAL_LANDFILL!).
+3. RECYCLABLE_CLEAN: Clean rigid plastics (#1 PET, #2 HDPE, #5 PP), empty clean metal/aluminum cans, container glass bottles/jars, dry unsoiled cardboard/paper.
+4. MEDICAL_SANITARY: Medicine blister packs, expired pharmaceuticals, syringes, sharps, test strips, masks, bandages, diapers, sanitary pads.
+5. TEXTILE_DONATION: Wearable clothing, shoes, fabric scraps, bed linens, towels, clean garments.
+6. CONSTRUCTION_INERT: Broken ceramics, porcelain mugs/plates, window/mirror glass, clay pots, concrete, bricks, tiles.
+7. SOFT_PLASTIC_SPECIAL: Plastic grocery bags, flexible wrappers, chip packets, bubble wrap, multi-layer foil pouches.
+8. RESIDUAL_LANDFILL: Poly-coated hot paper cups, heavily contaminated unrecyclable items, composite non-recyclable trash.
 
 ### STEP 3: PROPER DISPOSAL & PREPARATION
-- Provide clear, item-specific safety and preparation instructions tailored to the detected object.
-- For HAZARDOUS_EWASTE (especially batteries): explicitly include:
-  1. "Do not place in regular trash or recycling due to fire risk."
-  2. "Tape terminals with clear tape."
-  3. "Drop off at an authorized E-Waste center."
+- Provide 2 to 3 actionable, item-specific preparation and disposal instructions.
+- Examples:
+  - For Banana Peel: ["1. Remove any plastic stickers or produce labels.", "2. Drain excess liquids.", "3. Place directly into the Green Municipal Wet / Compost bin."]
+  - For Lithium Battery: ["1. Do not place in regular trash or recycling due to fire risk.", "2. Tape terminals with clear tape.", "3. Drop off at an authorized E-Waste center."]
 
 OUTPUT JSON SCHEMA:
-Return ONLY a valid JSON object matching this schema:
+Return ONLY a valid JSON object matching:
 {
   "itemName": "string",
   "material": "string",
-  "universalStream": "HAZARDOUS_EWASTE" | "RECYCLABLE_CLEAN" | "COMPOST_ORGANIC" | "MEDICAL_SANITARY" | "TEXTILE_DONATION" | "CONSTRUCTION_INERT" | "SOFT_PLASTIC_SPECIAL" | "RESIDUAL_LANDFILL",
+  "universalStream": "COMPOST_ORGANIC" | "HAZARDOUS_EWASTE" | "RECYCLABLE_CLEAN" | "MEDICAL_SANITARY" | "TEXTILE_DONATION" | "CONSTRUCTION_INERT" | "SOFT_PLASTIC_SPECIAL" | "RESIDUAL_LANDFILL",
   "confidence": "high" | "medium" | "low",
   "components": [
     { "name": "string", "material": "string", "recyclability": "string" }
   ],
-  "customPrepSteps": ["string", "string", "string"],
+  "customPrepSteps": ["string", "string"],
   "needsClarification": boolean,
   "clarificationQuestion": string or null
 }`;
@@ -296,44 +296,79 @@ export async function analyzeWasteImageWithGemini(
   mimeType: string,
   textOrRegionHint?: string
 ): Promise<IdentificationResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  let apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
-  // Fallback if key missing, placeholder, or invalid
+  // Fallback: If not found in process.env, check root .env file directly
+  if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey.length < 10) {
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      const candidates = [
+        path.resolve(process.cwd(), ".env.local"),
+        path.resolve(process.cwd(), "../../.env"),
+        path.resolve(process.cwd(), "../.env"),
+        path.resolve(process.cwd(), ".env")
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          const raw = fs.readFileSync(p, "utf-8");
+          const m = raw.match(/GEMINI_API_KEY=([^\r\n]+)/);
+          if (m && m[1] && m[1].trim().length > 10 && !m[1].includes("YOUR_")) {
+            apiKey = m[1].trim();
+            break;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  // Fallback to offline extraction if still no valid API key
   if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey.startsWith("dummy") || apiKey.length < 10) {
     return fallbackUniversalExtraction(textOrRegionHint || "Scanned Waste Item");
   }
 
-  // 1. Clean Base64: Strip any data URL prefix
+  // 1. Clean Base64: Strip data URL prefix and whitespace/newlines
   let cleanBase64 = base64Image;
-  const prefixMatch = base64Image.match(/^data:([a-zA-Z0-9/+-]+);base64,(.+)$/);
+  const prefixMatch = base64Image.match(/^data:([a-zA-Z0-9/+-]+);base64,([\s\S]+)$/);
   if (prefixMatch) {
     if (prefixMatch[1]) mimeType = prefixMatch[1];
     cleanBase64 = prefixMatch[2];
   } else {
     cleanBase64 = base64Image.replace(/^data:image\/[a-zA-Z0-9.+_-]+;base64,/, "");
   }
+  cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
 
   // 2. Validate MIME type
-  if (!mimeType || mimeType === "image/*") {
+  if (!mimeType || mimeType === "image/*" || mimeType === "image/jpg") {
     mimeType = "image/jpeg";
   }
 
   const ai = new GoogleGenAI({ apiKey });
 
-  // 3. Multi-model resilience: try gemini-3.8-flash, with automatic fallback to 2.5 and 1.5
+  // 3. Multi-model resilience: Primary is gemini-3.8-flash
   const candidateModels = [
     process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    "gemini-3.8-flash",
     "gemini-2.5-flash",
-    "gemini-1.5-flash",
-    "gemini-2.0-flash"
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
   ];
   // Deduplicate
   const modelsToTry = Array.from(new Set(candidateModels));
 
-  const promptText = `Follow the strict 3-step waste scanning contract:
-- Step 1: Item Identification: Accurately name the precise item detected (e.g., if batteries or cylindrical cells are visible, specify "32700 Lithium-Ion Battery Cells") and physical materials.
-- Step 2: Waste Classification: Classify into EXACTLY ONE universal stream. If any battery, cell, electronics, cable, or vape is detected, it MUST be classified as HAZARDOUS_EWASTE (NEVER RECYCLABLE_CLEAN or RESIDUAL_LANDFILL).
-- Step 3: Proper Disposal & Preparation: Provide clear item-specific steps (for batteries: 1. Do not place in regular trash or recycling due to fire risk. 2. Tape terminals with clear tape. 3. Drop off at an authorized E-Waste center).
+  const promptText = `Analyze the visual pixels of this waste image as an expert municipal waste auditor.
+Follow the strict 3-step waste sorting contract:
+- Step 1: Item Identification: Accurately name the precise item detected (e.g., "Banana Peel", "32700 Lithium-Ion Battery Cells", "Cracked Ceramic Coffee Mug") and list its physical materials. NEVER use generic names like "Captured Waste Item".
+- Step 2: Waste Classification: Classify into EXACTLY ONE universal stream:
+  * COMPOST_ORGANIC (for any food scrap, fruit peel, banana peel, vegetable trimmings, greasy paper)
+  * HAZARDOUS_EWASTE (for all batteries, cells, electronics, cables, vapes)
+  * RECYCLABLE_CLEAN (for clean metal cans, plastic bottles, container glass, clean paper)
+  * MEDICAL_SANITARY (for medicine blister packs, needles, diapers)
+  * TEXTILE_DONATION (for clothes, fabrics, garments)
+  * CONSTRUCTION_INERT (for ceramics, broken mugs, bricks)
+  * SOFT_PLASTIC_SPECIAL (for plastic bags, flexible pouches)
+  * RESIDUAL_LANDFILL (for composite unrecyclable trash)
+- Step 3: Proper Disposal & Preparation: Give 2-3 specific, actionable prep steps.
 ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
 
   let lastError: any = null;
@@ -383,10 +418,17 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
           ? parsed.universalStream
           : "RESIDUAL_LANDFILL";
 
-        // Safety enforcement: If the item name, material, or components indicate battery, lithium, 32700, cell, or electronics, lock onto HAZARDOUS_EWASTE
+        // Double-Lock Safety Rules:
         const combinedSafetyCheck = `${itemName} ${parsed.material || ""} ${(parsed.components || []).map((c: any) => `${c.name} ${c.material}`).join(" ")}`.toLowerCase();
+
+        // Safety 1: Batteries and Electronics MUST be HAZARDOUS_EWASTE
         if (/battery|lithium|32700|18650|cell|power bank|accumulator|charger|circuit board|vape/i.test(combinedSafetyCheck)) {
           universalStream = "HAZARDOUS_EWASTE";
+        }
+
+        // Safety 2: Fruit peels, banana peels, and food scraps MUST be COMPOST_ORGANIC
+        if (/banana|peel|fruit|apple|vegetable|kitchen waste|food scrap|citrus|rind|tea bag|coffee ground/i.test(combinedSafetyCheck)) {
+          universalStream = "COMPOST_ORGANIC";
         }
 
         let customPrepSteps = Array.isArray(parsed.customPrepSteps) && parsed.customPrepSteps.length > 0
@@ -403,6 +445,15 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
           if (!hasDrop) safetySteps.push("3. Drop off at an authorized E-Waste center.");
           if (safetySteps.length > 0) {
             customPrepSteps = [...safetySteps, ...customPrepSteps];
+          }
+        } else if (universalStream === "COMPOST_ORGANIC") {
+          const hasSticker = customPrepSteps.some((s: string) => /sticker|label/i.test(s));
+          const hasWetBin = customPrepSteps.some((s: string) => /green|compost|wet/i.test(s));
+          const bioSteps: string[] = [];
+          if (!hasSticker) bioSteps.push("1. Remove any plastic produce stickers or rubber bands.");
+          if (!hasWetBin) bioSteps.push("2. Place directly into the Green Municipal Wet / Compost bin.");
+          if (bioSteps.length > 0) {
+            customPrepSteps = [...bioSteps, ...customPrepSteps];
           }
         }
 

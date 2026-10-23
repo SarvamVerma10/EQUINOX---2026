@@ -144,14 +144,23 @@ export const ruleEngine = {
       // If matchingRuleId wasn't exact, take the top candidate that shares the category
       const fallbackChunk = candidateRules.find(
         c => c.categoryName.toLowerCase() === evaluation.category!.toLowerCase()
-      ) || candidateRules[0];
+      );
 
-      evidenceList.push({
-        ruleId: fallbackChunk.chunkId,
-        sourceExcerpt: fallbackChunk.sourceExcerpt,
-        pageNumber: fallbackChunk.pageNumber,
-        sectionTitle: fallbackChunk.sectionTitle
-      });
+      if (fallbackChunk) {
+        evidenceList.push({
+          ruleId: fallbackChunk.chunkId,
+          sourceExcerpt: fallbackChunk.sourceExcerpt,
+          pageNumber: fallbackChunk.pageNumber,
+          sectionTitle: fallbackChunk.sectionTitle
+        });
+      } else if (evaluation.exactQuote) {
+        evidenceList.push({
+          ruleId: evaluation.matchingRuleId || 'verified-rule',
+          sourceExcerpt: evaluation.exactQuote,
+          pageNumber: evaluation.pageNumber,
+          sectionTitle: evaluation.sectionTitle
+        });
+      }
     }
 
     const finalStatus: AnalysisStatus = evaluation.requiresHumanReview
