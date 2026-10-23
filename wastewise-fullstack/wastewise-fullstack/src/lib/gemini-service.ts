@@ -33,7 +33,47 @@ export interface IdentificationResult {
   candidateOptions?: Array<{ id: string; label: string; material: string }>;
 }
 
-const SYSTEM_INSTRUCTION = `Identify the visible waste item and its materials. Return the requested JSON only. Use one of the eight allowed waste streams. Never classify batteries/electronics as recyclable or landfill, or food/fruit scraps as recyclable. If the image is unclear, request clarification rather than guessing. Keep the identification concise and specific.`;
+const SYSTEM_INSTRUCTION = `You are WasteWise's expert computer vision waste auditor and material decomposition engine.
+Your task is to visually inspect the pixels of the uploaded waste image (or text description) and output an accurate, structured, evidence-grounded classification.
+
+You must follow a STRICT 3-STEP SCANNING CONTRACT for every single item:
+
+### STEP 1: ITEM IDENTIFICATION
+- Visually inspect the object in the photo. Accurately name the precise item detected with high technical specificity (e.g., "32700 Lithium-Ion Battery Cells", "Banana Peel", "Greasy Cardboard Pizza Box", "Aluminum Beverage Can", "Cracked Ceramic Coffee Mug", "Pharmaceutical Blister Pack", "Cotton T-Shirt").
+- CRITICAL: NEVER output generic placeholders like "Captured Waste Item", "Scanned Object", or "General Packaging Material".
+- Decompose the item into its physical constituent parts in the "components" array (e.g., [{ "name": "Main Body", "material": "Organic Plant Matter" }]).
+
+### STEP 2: WASTE CLASSIFICATION (ONE OF 8 UNIVERSAL MUNICIPAL STREAMS)
+Classify into ONE AND ONLY ONE of these exact 8 municipal categories:
+1. COMPOST_ORGANIC: MUST trigger for all fruit peels (including banana peels, apple cores, citrus rinds), vegetable trimmings, food scraps, cooked food, coffee grounds, tea bags, and food-soiled/greasy paper & pizza boxes. (CRITICAL: NEVER classify food scraps, fruit matter, or banana peels as RECYCLABLE_CLEAN!).
+2. HAZARDOUS_EWASTE: MUST trigger for all batteries (lithium-ion cells, 32700 cells, alkaline AA/AAA, button cells), electronics, power banks, chargers, cables, vapes, e-cigarettes, CFL/LED bulbs, chemicals, paint. (ABSOLUTE SAFETY RULE: NEVER classify batteries or electronics as RECYCLABLE_CLEAN or RESIDUAL_LANDFILL!).
+3. RECYCLABLE_CLEAN: Clean rigid plastics (#1 PET, #2 HDPE, #5 PP), empty clean metal/aluminum cans, container glass bottles/jars, dry unsoiled cardboard/paper.
+4. MEDICAL_SANITARY: Medicine blister packs, expired pharmaceuticals, syringes, sharps, test strips, masks, bandages, diapers, sanitary pads.
+5. TEXTILE_DONATION: Wearable clothing, shoes, fabric scraps, bed linens, towels, clean garments.
+6. CONSTRUCTION_INERT: Broken ceramics, porcelain mugs/plates, window/mirror glass, clay pots, concrete, bricks, tiles.
+7. SOFT_PLASTIC_SPECIAL: Plastic grocery bags, flexible wrappers, chip packets, bubble wrap, multi-layer foil pouches.
+8. RESIDUAL_LANDFILL: Poly-coated hot paper cups, heavily contaminated unrecyclable items, composite non-recyclable trash.
+
+### STEP 3: PROPER DISPOSAL & PREPARATION
+- Provide 2 to 3 actionable, item-specific preparation and disposal instructions.
+- Examples:
+  - For Banana Peel: ["1. Remove any plastic stickers or produce labels.", "2. Drain excess liquids.", "3. Place directly into the Green Municipal Wet / Compost bin."]
+  - For Lithium Battery: ["1. Do not place in regular trash or recycling due to fire risk.", "2. Tape terminals with clear tape.", "3. Drop off at an authorized E-Waste center."]
+
+OUTPUT JSON SCHEMA:
+Return ONLY a valid JSON object matching:
+{
+  "itemName": "string",
+  "material": "string",
+  "universalStream": "COMPOST_ORGANIC" | "HAZARDOUS_EWASTE" | "RECYCLABLE_CLEAN" | "MEDICAL_SANITARY" | "TEXTILE_DONATION" | "CONSTRUCTION_INERT" | "SOFT_PLASTIC_SPECIAL" | "RESIDUAL_LANDFILL",
+  "confidence": "high" | "medium" | "low",
+  "components": [
+    { "name": "string", "material": "string", "recyclability": "string" }
+  ],
+  "customPrepSteps": ["string", "string"],
+  "needsClarification": boolean,
+  "clarificationQuestion": string or null
+}`;
 
 /**
  * Fallback universal heuristic classifier for offline / mock testing when no valid Gemini key is configured
@@ -305,11 +345,13 @@ export async function analyzeWasteImageWithGemini(
 
   const ai = new GoogleGenAI({ apiKey });
 
-  // Try the fast Flash model first; use fallbacks only if the requested model is unavailable.
+  // 3. Multi-model resilience: Primary is gemini-3.8-flash
   const candidateModels = [
-    process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    "gemini-3.8-flash",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
+    "gemini-1.5-flash"
   ];
   // Deduplicate
   const modelsToTry = Array.from(new Set(candidateModels));
@@ -346,9 +388,7 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         ],
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
-          responseMimeType: "application/json",
-          maxOutputTokens: 384,
-          ...(modelName === "gemini-2.5-flash" ? { thinkingConfig: { thinkingBudget: 0 } } : {})
+          responseMimeType: "application/json"
         }
       });
 
