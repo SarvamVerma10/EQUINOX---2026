@@ -5,6 +5,10 @@ const nextConfig = {
     const backendUrl = process.env.BACKEND_INTERNAL_URL || 'http://localhost:8080';
     return [
       {
+        source: '/',
+        destination: '/wastewise.html',
+      },
+      {
         source: '/api/v1/:path*',
         destination: `${backendUrl}/api/v1/:path*`,
       },

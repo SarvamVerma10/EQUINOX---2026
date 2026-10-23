@@ -21,37 +21,40 @@ export interface CameraUploadHandle {
 }
 
 /**
- * Resizes and compresses an image before it is converted to Base64 for the API request.
+ * Resizes and compresses an image Data URL on an HTML5 canvas to max 1024x1024 at JPEG quality 0.8
  */
-async function compressImage(image: Blob, maxDimension = 768, quality = 0.75): Promise<Blob> {
-  const bitmap = await createImageBitmap(image);
-  try {
-    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-    const width = Math.round(bitmap.width * scale);
-    const height = Math.round(bitmap.height * scale);
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
+function compressImage(dataUrl: string, maxDimension = 1024, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+      }
 
-    const context = canvas.getContext('2d');
-    if (!context) {
-      throw new Error('Unable to prepare the image for upload.');
-    }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(dataUrl); // Fallback to original
+        return;
+      }
 
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-    context.drawImage(bitmap, 0, 0, width, height);
-
-    return await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject(new Error('Unable to compress the selected image.')),
-        'image/jpeg',
-        quality
-      );
-    });
-  } finally {
-    bitmap.close();
-  }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = (e) => reject(new Error('Failed to load image for canvas compression.'));
+    img.src = dataUrl;
+  });
 }
 
 export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
@@ -74,23 +77,11 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const previewUrlRef = useRef<string | null>(null);
 
-  const clearPreviewImage = () => {
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current);
-      previewUrlRef.current = null;
-    }
-    setPreviewImage(null);
-  };
-
-  // Clean up camera stream and preview URL on unmount
+  // Clean up WebRTC media stream on unmount
   useEffect(() => {
     return () => {
       stopCamera();
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-      }
     };
   }, []);
 
@@ -106,7 +97,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
 
   const startCamera = async (facing: 'environment' | 'user' = facingMode) => {
     setCameraError(null);
-    clearPreviewImage();
+    setPreviewImage(null);
 
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -175,18 +166,15 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   };
 
   /**
-   * Compress the original image before encoding and sending it to the API.
+   * Process a base64 or file upload, compress to max 1024px JPEG, and send to API
    */
-  const processAndSubmitImage = async (image: Blob) => {
+  const processAndSubmitImage = async (dataUrl: string) => {
     try {
       onAnalysisStart();
-      const compressedImage = await compressImage(image);
-      clearPreviewImage();
-      const previewUrl = URL.createObjectURL(compressedImage);
-      previewUrlRef.current = previewUrl;
-      setPreviewImage(previewUrl);
+      const compressedDataUrl = await compressImage(dataUrl, 1024, 0.8);
+      setPreviewImage(compressedDataUrl);
 
-      const result = await apiClient.analyzeImage(compressedImage, { localityId });
+      const result = await apiClient.analyzeImage(compressedDataUrl, { localityId });
       onAnalysisSuccess(result);
     } catch (err: any) {
       onError(err);
@@ -218,7 +206,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
     const canvas = canvasRef.current || document.createElement('canvas');
     let width = video.videoWidth;
     let height = video.videoHeight;
-    const maxDim = 768;
+    const maxDim = 1024;
 
     if (width > maxDim || height > maxDim) {
       if (width > height) {
@@ -236,16 +224,10 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, width, height);
-    const image = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, 'image/jpeg', 0.75);
-    });
-    if (!image) {
-      onError(new Error('Unable to prepare the captured photo. Please try again.'));
-      return;
-    }
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
     stopCamera();
-    await processAndSubmitImage(image);
+    await processAndSubmitImage(dataUrl);
   };
 
   /**
@@ -256,7 +238,14 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
     if (!file) return;
 
     stopCamera();
-    await processAndSubmitImage(file);
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const dataUrl = evt.target?.result as string;
+      if (dataUrl) {
+        await processAndSubmitImage(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -286,7 +275,14 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
     }
 
     stopCamera();
-    await processAndSubmitImage(file);
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const dataUrl = evt.target?.result as string;
+      if (dataUrl) {
+        await processAndSubmitImage(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   /**
@@ -297,7 +293,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
     if (!textQuery.trim() || isLoading) return;
 
     stopCamera();
-    clearPreviewImage();
+    setPreviewImage(null);
 
     try {
       onAnalysisStart();
@@ -314,7 +310,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   const runPreset = async (label: string, query: string) => {
     setTextQuery(query);
     stopCamera();
-    clearPreviewImage();
+    setPreviewImage(null);
 
     try {
       onAnalysisStart();
@@ -466,7 +462,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
               <div className="absolute bottom-3 right-3">
                 <button
                   type="button"
-                  onClick={clearPreviewImage}
+                  onClick={() => setPreviewImage(null)}
                   className="px-3 py-1.5 rounded-lg bg-black/70 hover:bg-black/90 text-xs font-medium text-stone-300 backdrop-blur-md border border-white/10"
                 >
                   Clear Photo

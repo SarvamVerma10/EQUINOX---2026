@@ -34,6 +34,7 @@ export interface IdentificationResult {
   candidateOptions?: Array<{ id: string; label: string; material: string }>;
 }
 
+<<<<<<< HEAD
 export function isGeminiModelOverloaded(error: unknown): boolean {
   if (error && typeof error === "object") {
     const providerError = error as { status?: unknown; code?: unknown };
@@ -126,6 +127,49 @@ const SYSTEM_INSTRUCTION = `You are a multimodal waste-material identification a
 Choose one universal stream only when the object/material evidence supports it: RECYCLABLE_CLEAN (clean paper/cardboard, container glass, accepted rigid plastics, and metals); COMPOST_ORGANIC (food scraps, yard trimmings, and compostable organics); HAZARDOUS_EWASTE (batteries, electronics, chemicals, paints, oils, lamps, and other hazardous waste); MEDICAL_SANITARY (medicines, sharps, clinical and sanitary waste); TEXTILE_DONATION (clothing and textiles); CONSTRUCTION_INERT (ceramics, masonry, and inert construction debris); SOFT_PLASTIC_SPECIAL (flexible films, bags, and wrappers); RESIDUAL_LANDFILL (known non-recoverable or contaminated residual waste). These are broad sorting streams, not claims that every locality accepts the item.
 
 Never infer an unseen resin, chemical, contamination state, or local collection route. Never send batteries/electronics/chemicals/sharps to ordinary recycling or landfill, or food scraps to recycling. If the object, material, or relevant condition cannot be distinguished, set confidence to low, needsClarification to true, and explain what is uncertain. Return only valid JSON matching the requested schema.`;
+=======
+const SYSTEM_INSTRUCTION = `You are WasteWise's expert computer vision waste auditor and material decomposition engine.
+Your task is to visually inspect the pixels of the uploaded waste image (or text description) and output an accurate, structured, evidence-grounded classification.
+
+You must follow a STRICT 3-STEP SCANNING CONTRACT for every single item:
+
+### STEP 1: ITEM IDENTIFICATION
+- Visually inspect the object in the photo. Accurately name the precise item detected with high technical specificity (e.g., "32700 Lithium-Ion Battery Cells", "Banana Peel", "Greasy Cardboard Pizza Box", "Aluminum Beverage Can", "Cracked Ceramic Coffee Mug", "Pharmaceutical Blister Pack", "Cotton T-Shirt").
+- CRITICAL: NEVER output generic placeholders like "Captured Waste Item", "Scanned Object", or "General Packaging Material".
+- Decompose the item into its physical constituent parts in the "components" array (e.g., [{ "name": "Main Body", "material": "Organic Plant Matter" }]).
+
+### STEP 2: WASTE CLASSIFICATION (ONE OF 8 UNIVERSAL MUNICIPAL STREAMS)
+Classify into ONE AND ONLY ONE of these exact 8 municipal categories:
+1. COMPOST_ORGANIC: MUST trigger for all fruit peels (including banana peels, apple cores, citrus rinds), vegetable trimmings, food scraps, cooked food, coffee grounds, tea bags, and food-soiled/greasy paper & pizza boxes. (CRITICAL: NEVER classify food scraps, fruit matter, or banana peels as RECYCLABLE_CLEAN!).
+2. HAZARDOUS_EWASTE: MUST trigger for all batteries (lithium-ion cells, 32700 cells, alkaline AA/AAA, button cells), electronics, power banks, chargers, cables, vapes, e-cigarettes, CFL/LED bulbs, chemicals, paint. (ABSOLUTE SAFETY RULE: NEVER classify batteries or electronics as RECYCLABLE_CLEAN or RESIDUAL_LANDFILL!).
+3. RECYCLABLE_CLEAN: Clean rigid plastics (#1 PET, #2 HDPE, #5 PP), empty clean metal/aluminum cans, container glass bottles/jars, dry unsoiled cardboard/paper.
+4. MEDICAL_SANITARY: Medicine blister packs, expired pharmaceuticals, syringes, sharps, test strips, masks, bandages, diapers, sanitary pads.
+5. TEXTILE_DONATION: Wearable clothing, shoes, fabric scraps, bed linens, towels, clean garments.
+6. CONSTRUCTION_INERT: Broken ceramics, porcelain mugs/plates, window/mirror glass, clay pots, concrete, bricks, tiles.
+7. SOFT_PLASTIC_SPECIAL: Plastic grocery bags, flexible wrappers, chip packets, bubble wrap, multi-layer foil pouches.
+8. RESIDUAL_LANDFILL: Poly-coated hot paper cups, heavily contaminated unrecyclable items, composite non-recyclable trash.
+
+### STEP 3: PROPER DISPOSAL & PREPARATION
+- Provide 2 to 3 actionable, item-specific preparation and disposal instructions.
+- Examples:
+  - For Banana Peel: ["1. Remove any plastic stickers or produce labels.", "2. Drain excess liquids.", "3. Place directly into the Green Municipal Wet / Compost bin."]
+  - For Lithium Battery: ["1. Do not place in regular trash or recycling due to fire risk.", "2. Tape terminals with clear tape.", "3. Drop off at an authorized E-Waste center."]
+
+OUTPUT JSON SCHEMA:
+Return ONLY a valid JSON object matching:
+{
+  "itemName": "string",
+  "material": "string",
+  "universalStream": "COMPOST_ORGANIC" | "HAZARDOUS_EWASTE" | "RECYCLABLE_CLEAN" | "MEDICAL_SANITARY" | "TEXTILE_DONATION" | "CONSTRUCTION_INERT" | "SOFT_PLASTIC_SPECIAL" | "RESIDUAL_LANDFILL",
+  "confidence": "high" | "medium" | "low",
+  "components": [
+    { "name": "string", "material": "string", "recyclability": "string" }
+  ],
+  "customPrepSteps": ["string", "string"],
+  "needsClarification": boolean,
+  "clarificationQuestion": string or null
+}`;
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
 
 /**
  * Fallback universal heuristic classifier for offline / mock testing when no valid Gemini key is configured
@@ -494,7 +538,21 @@ export async function analyzeWasteImageWithGemini(
     }
   });
 
+<<<<<<< HEAD
   const modelName = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+=======
+  // 3. Multi-model resilience: Primary is gemini-3.8-flash
+  const candidateModels = [
+    process.env.GEMINI_MODEL || "gemini-3.8-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash"
+  ];
+  // Deduplicate
+  const modelsToTry = Array.from(new Set(candidateModels));
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
 
   const promptText = `Inspect the whole image and identify the most likely waste item, every visually distinguishable material/component, and its broad universal sorting stream. Consider ordinary, commercial, agricultural, construction, textile, medical, electronic, chemical, and industrial waste—not only common packaging.
 
@@ -516,6 +574,7 @@ ${textOrRegionHint ? `User-provided item context: "${textOrRegionHint}"` : ""}`;
       const configForModel = (model: string) => ({
           systemInstruction: SYSTEM_INSTRUCTION,
           responseMimeType: "application/json",
+<<<<<<< HEAD
           responseJsonSchema: {
             type: "object",
             properties: {
@@ -567,6 +626,10 @@ ${textOrRegionHint ? `User-provided item context: "${textOrRegionHint}"` : ""}`;
           temperature: 0.1,
           ...(model === "gemini-3.8-flash" ? { thinkingLevel: "minimal" as const } : {}),
           ...(model === "gemini-2.5-flash" ? { thinkingConfig: { thinkingBudget: 0 } } : {})
+=======
+          temperature: 0.1
+        }
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
       });
       const response = await (async () => {
         try {
@@ -634,8 +697,14 @@ ${textOrRegionHint ? `User-provided item context: "${textOrRegionHint}"` : ""}`;
         throw new Error("Gemini could not identify the item. Please retry with a clearer photo.");
       }
 
+<<<<<<< HEAD
         let itemName = (parsed.itemName || parsed.name || "Scanned Waste Item").trim();
         const isValidStream = [
+=======
+      if (parsed && (parsed.itemName || parsed.name || parsed.item || parsed.title)) {
+        let itemName = (parsed.itemName || parsed.name || parsed.item || parsed.title || "Scanned Waste Item").trim();
+        let universalStream = [
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
           "RECYCLABLE_CLEAN",
           "COMPOST_ORGANIC",
           "HAZARDOUS_EWASTE",
@@ -708,8 +777,17 @@ ${textOrRegionHint ? `User-provided item context: "${textOrRegionHint}"` : ""}`;
           clarificationQuestion: isValidStream ? (parsed.clarificationQuestion || null) : null,
           needsClarification: isValidStream && Boolean(parsed.needsClarification)
         };
+<<<<<<< HEAD
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "provider unavailable";
     throw new Error(`Gemini waste identification failed: ${message}`);
+=======
+      }
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[Gemini Vision] Model ${modelName} failed (${err?.status || err?.message || 'unknown error'}), trying next candidate model...`);
+      continue;
+    }
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
   }
 }

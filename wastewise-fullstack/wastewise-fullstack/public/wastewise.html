@@ -2958,6 +2958,7 @@
       progPct.textContent = "100%";
 
       let resolvedIdent = null;
+<<<<<<< HEAD
       if (currentPhotoPresetKey === "noodle_pack") {
         resolvedIdent = KNOWN_ITEMS_DB.instant_noodle_packet;
       } else if (currentPhotoPresetKey === "multi_items") {
@@ -2978,6 +2979,66 @@
             { id: "food_soiled_film", name: "Unlisted Item", material: "Unknown", queryTerm: "unlisted mystery composite" }
           ]
         };
+=======
+      if (currentCapturedImageDataUrl && currentCapturedImageDataUrl.startsWith("data:")) {
+        try {
+          progStage.textContent = "Calling Gemini 3.8 Flash Vision...";
+          progBar.style.width = "75%";
+          progPct.textContent = "75%";
+
+          const idRes = await fetch("/api/identify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              imageBase64: currentCapturedImageDataUrl,
+              mimeType: "image/jpeg"
+            })
+          });
+          const idData = await idRes.json();
+          if (idData && idData.item && idData.status !== "error") {
+            resolvedIdent = {
+              name: idData.item.name || idData.item.itemName || "Scanned Waste Item",
+              material: idData.item.material || "Identified Material",
+              confidence: idData.item.confidence || "high",
+              universalStream: idData.item.universalStream,
+              customPrepSteps: idData.item.customPrepSteps || [],
+              clarificationQuestion: idData.clarificationQuestion || null,
+              components: (idData.item.components || []).map((c, i) => ({
+                id: `comp_${i}`,
+                name: c.name,
+                material: c.material,
+                queryTerm: c.name
+              }))
+            };
+          }
+        } catch (apiErr) {
+          console.warn("Backend /api/identify error, falling back:", apiErr);
+        }
+      }
+
+      if (!resolvedIdent) {
+        if (currentPhotoPresetKey === "noodle_pack") {
+          resolvedIdent = KNOWN_ITEMS_DB.instant_noodle_packet;
+        } else if (currentPhotoPresetKey === "multi_items") {
+          resolvedIdent = KNOWN_ITEMS_DB[currentSelectedMultiItemKey || "banana_peel"];
+        } else if (currentPhotoPresetKey === "blurry_dark") {
+          resolvedIdent = KNOWN_ITEMS_DB.blurry_dark;
+        } else if (currentPhotoPresetKey && KNOWN_ITEMS_DB[currentPhotoPresetKey]) {
+          resolvedIdent = KNOWN_ITEMS_DB[currentPhotoPresetKey];
+        } else {
+          resolvedIdent = {
+            name: "Captured Packaging",
+            material: "Mixed Packaging",
+            confidence: "medium",
+            clarificationQuestion: "Which part are you disposing of?",
+            components: [
+              { id: "pet_bottle_clean", name: "Rinsed Bottle / Cardboard", material: "Clean PET #1 / Cardboard", queryTerm: "pet bottle" },
+              { id: "clean_outer_film", name: "Laminated Wrapper", material: "Multi-layer laminate", queryTerm: "multi-layer laminated wrapper" },
+              { id: "food_soiled_film", name: "Unlisted Item", material: "Unknown", queryTerm: "unlisted mystery composite" }
+            ]
+          };
+        }
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
       }
 
       isAnalyzing = false;
@@ -2991,6 +3052,29 @@
         selectedComponent: null,
         activeGuide
       });
+<<<<<<< HEAD
+=======
+      if (resolvedIdent && resolvedIdent.universalStream) {
+        const streamToCat = {
+          COMPOST_ORGANIC: "biodegradable",
+          RECYCLABLE_CLEAN: "dry_recyclable",
+          HAZARDOUS_EWASTE: "special_handling",
+          MEDICAL_SANITARY: "sanitary_medical",
+          RESIDUAL_LANDFILL: "general_waste",
+          CONSTRUCTION_INERT: "general_waste",
+          SOFT_PLASTIC_SPECIAL: "general_waste",
+          TEXTILE_DONATION: "dry_recyclable"
+        };
+        const mappedCat = streamToCat[resolvedIdent.universalStream];
+        if (mappedCat) {
+          currentEvaluationResult.category = mappedCat;
+          currentEvaluationResult.status = "recommended";
+        }
+      }
+      if (resolvedIdent && Array.isArray(resolvedIdent.customPrepSteps) && resolvedIdent.customPrepSteps.length > 0) {
+        currentEvaluationResult.instructions = resolvedIdent.customPrepSteps;
+      }
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
       renderResultCard();
     }
 
@@ -3038,7 +3122,11 @@
       renderResultCard();
     }
 
+<<<<<<< HEAD
     function handleManualSearch() {
+=======
+    async function handleManualSearch() {
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
       const input = document.getElementById("manual-search-input");
       const query = (input.value || "").trim();
       if (!query) {
@@ -3046,8 +3134,32 @@
         return;
       }
 
+<<<<<<< HEAD
       const lower = query.toLowerCase();
       let matchedIdent = null;
+=======
+      let matchedIdent = null;
+      try {
+        const idRes = await fetch("/api/identify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ textDescription: query })
+        });
+        const idData = await idRes.json();
+        if (idData && idData.item && idData.status !== "error") {
+          matchedIdent = {
+            name: idData.item.name || query,
+            material: idData.item.material || "Identified Material",
+            confidence: idData.item.confidence || "high",
+            universalStream: idData.item.universalStream,
+            customPrepSteps: idData.item.customPrepSteps || [],
+            components: []
+          };
+        }
+      } catch (e) {}
+
+      const lower = query.toLowerCase();
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
       if (lower.includes("noodle") || lower.includes("maggi") || lower.includes("packet")) {
         matchedIdent = KNOWN_ITEMS_DB.instant_noodle_packet;
       } else if (lower.includes("banana") || lower.includes("peel") || lower.includes("apple") || lower.includes("food") || lower.includes("vegetable") || lower.includes("tea")) {
@@ -3073,6 +3185,29 @@
         selectedComponent: null,
         activeGuide
       });
+<<<<<<< HEAD
+=======
+      if (matchedIdent && matchedIdent.universalStream) {
+        const streamToCat = {
+          COMPOST_ORGANIC: "biodegradable",
+          RECYCLABLE_CLEAN: "dry_recyclable",
+          HAZARDOUS_EWASTE: "special_handling",
+          MEDICAL_SANITARY: "sanitary_medical",
+          RESIDUAL_LANDFILL: "general_waste",
+          CONSTRUCTION_INERT: "general_waste",
+          SOFT_PLASTIC_SPECIAL: "general_waste",
+          TEXTILE_DONATION: "dry_recyclable"
+        };
+        const mappedCat = streamToCat[matchedIdent.universalStream];
+        if (mappedCat) {
+          currentEvaluationResult.category = mappedCat;
+          currentEvaluationResult.status = "recommended";
+        }
+      }
+      if (matchedIdent && Array.isArray(matchedIdent.customPrepSteps) && matchedIdent.customPrepSteps.length > 0) {
+        currentEvaluationResult.instructions = matchedIdent.customPrepSteps;
+      }
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
       renderResultCard();
     }
 
@@ -4155,6 +4290,9 @@
     }
 
   </script>
+<<<<<<< HEAD
   <script src="/wastewise-bridge.js"></script>
+=======
+>>>>>>> d95c09d4a4f786b54b806f67fba7b96db5fb6d12
 </body>
 </html>
