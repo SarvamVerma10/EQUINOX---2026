@@ -911,6 +911,15 @@
       .story-atmosphere-leaf { transform: none !important; }
     }
   </style>
+
+  <!-- PWA: Web App Manifest + theme colour -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#4285F4" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WasteWise" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
 </head>
 <body id="app-theme-root" data-active-theme="brand" class="min-h-screen flex flex-col pb-20 md:pb-10 selection:bg-blue-500 selection:text-white">
 
@@ -4896,6 +4905,21 @@
       }
     }
 
+  </script>
+
+  <!-- PWA: Service Worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+          .then(function (reg) {
+            console.log('[WasteWise] Service Worker registered. Scope:', reg.scope);
+          })
+          .catch(function (err) {
+            console.warn('[WasteWise] Service Worker registration failed:', err);
+          });
+      });
+    }
   </script>
 </body>
 </html>

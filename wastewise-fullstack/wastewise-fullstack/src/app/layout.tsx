@@ -15,8 +15,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&family=Noto+Sans+Devanagari:wght@400;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#4285F4" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+                    .then(function(reg) { console.log('[WasteWise SW] registered:', reg.scope); })
+                    .catch(function(err) { console.warn('[WasteWise SW] failed:', err); });
+                });
+              }
+            `
+          }}
+        />
+      </body>
     </html>
   );
 }
