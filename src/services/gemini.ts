@@ -336,16 +336,8 @@ Respond ONLY with a valid JSON object matching this schema:
       const parsedJson = JSON.parse(extractJsonFromText(rawText));
       return geminiItemExtractionSchema.parse(parsedJson);
     } catch (err: any) {
-      // If API key is invalid or quota exceeded, fallback gracefully
-      if (
-        err?.message?.includes('API key not valid') ||
-        err?.message?.includes('API_KEY_INVALID') ||
-        err?.message?.includes('400')
-      ) {
-        console.warn('Gemini API key error, falling back to deterministic extraction:', err.message);
-        return fallbackExtractItem(input);
-      }
-      throw err;
+      console.warn('Gemini API call failed, falling back to deterministic extraction:', err?.message || err);
+      return fallbackExtractItem(input);
     }
   },
 
@@ -509,15 +501,8 @@ Respond ONLY with valid JSON matching:
       const parsedJson = JSON.parse(extractJsonFromText(rawText));
       return geminiGroundedEvaluationSchema.parse(parsedJson);
     } catch (err: any) {
-      if (
-        err?.message?.includes('API key not valid') ||
-        err?.message?.includes('API_KEY_INVALID') ||
-        err?.message?.includes('400')
-      ) {
-        console.warn('Gemini API key error, falling back to deterministic evaluation:', err.message);
-        return fallbackGroundedEvaluation(params);
-      }
-      throw err;
+      console.warn('Gemini API call failed, falling back to deterministic evaluation:', err?.message || err);
+      return fallbackGroundedEvaluation(params);
     }
   }
 };
