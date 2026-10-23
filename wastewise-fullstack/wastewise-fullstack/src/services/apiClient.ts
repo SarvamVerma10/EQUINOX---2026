@@ -268,7 +268,10 @@ export class WasteWiseApiClient {
         item: {
           name: identifiedItem?.name || 'Uncertain Item',
           alternatives: [],
-          components: identifiedItem?.components || []
+          components: identifiedItem?.components || [],
+          material: identifiedItem?.material,
+          confidence: identifiedItem?.confidence,
+          universalStream: identifiedItem?.universalStream
         },
         clarification: {
           required: true,
@@ -292,6 +295,8 @@ export class WasteWiseApiClient {
         name: disposalRes.item?.name || identifiedItem?.name || 'Scanned Waste Item',
         alternatives: [],
         components: disposalRes.item?.components || identifiedItem?.components || [],
+        material: disposalRes.item?.material || identifiedItem?.material,
+        confidence: disposalRes.item?.confidence || identifiedItem?.confidence,
         universalStream: disposalRes.universalStream || identifiedItem?.universalStream
       } as any,
       clarification: {
@@ -335,6 +340,8 @@ export class WasteWiseApiClient {
           name: identifiedItem?.name || textDescription,
           alternatives: [],
           components: identifiedItem?.components || [],
+          material: identifiedItem?.material,
+          confidence: identifiedItem?.confidence,
           universalStream: identifiedItem?.universalStream
         } as any,
         clarification: {
@@ -358,6 +365,8 @@ export class WasteWiseApiClient {
         name: disposalRes.item?.name || identifiedItem?.name || textDescription,
         alternatives: [],
         components: disposalRes.item?.components || identifiedItem?.components || [],
+        material: disposalRes.item?.material || identifiedItem?.material,
+        confidence: disposalRes.item?.confidence || identifiedItem?.confidence,
         universalStream: disposalRes.universalStream || identifiedItem?.universalStream
       } as any,
       clarification: {

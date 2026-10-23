@@ -19,12 +19,14 @@
   - **Grey (`#667085` → `#D0D5DD`)**: Unresolved / Needs Clarification (displays *"Could not verify the correct disposal category from the selected local guide"* when evidence is missing or conflicting)
 - **Guest Scan History & Non-Destructive Corrections**: Saved in browser `localStorage` (with explicit privacy controls) plus an administrator Correction Review Queue that preserves original AI records alongside user corrections.
 - **Bilingual UI**: Instant toggle between **English** and **हिन्दी (Hindi)**.
-- **Automated Test Suite**: 16 unit and integration tests covering camera permissions, AI identification, blurry images, guide matching, missing guides, conflicting rules, multi-part packaging, special-handling warnings, history, corrections, and API failures.
+- **Automated Test Suite**: Unit and integration tests cover camera permissions, AI identification, common waste streams, unknown materials, blurry images, guide matching, missing guides, conflicting rules, multi-part packaging, special-handling warnings, history, corrections, and API failures.
 
 ### Requires External Credentials for Production Deployment
-1. **Live Google Gemini Multimodal API (`GEMINI_API_KEY`)**: Required on the server (`POST /api/identify`) to run live cloud vision inference on arbitrary new camera photos via `@google/genai`. You can also enter a Gemini API key in the app's **Settings → Live Gemini API** panel for direct testing.
+1. **Live Google Gemini Multimodal API (`GEMINI_API_KEY`)**: Required on the server (`POST /api/identify`) to run live cloud vision inference on new camera photos via `@google/genai` (Gemini 3.8 Flash by default). You can also enter a Gemini API key in the app's **Settings → Live Gemini API** panel for direct testing.
 2. **Supabase PostgreSQL (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)**: Required if you want cross-device account-based history and cloud persistence beyond browser `localStorage` and server memory. SQL migrations with Row-Level Security (RLS) are provided in `supabase/migrations/001_initial_schema.sql`.
 3. **Official Campus / Municipal Guide Document**: Replace the built-in `Demo — Not verified local guidance` seed fixture by uploading your institution's official waste-management guide in the **Guide Admin** panel.
+
+Vision models cannot guarantee identification of every waste item or infer materials that are not visible. WasteWise reports uncertainty instead of assigning unknown items to landfill, and its broad material stream is not a substitute for checking the active local guide for an accepted collection route.
 
 ---
 
@@ -38,7 +40,7 @@ npm install
 cp .env.example .env.local
 # Edit .env.local and add your GEMINI_API_KEY (and optional Supabase credentials)
 
-# 3. Run the automated 16-scenario test suite
+# 3. Run the automated test suite
 npm test
 
 # 4. Start the Next.js development server
@@ -73,3 +75,4 @@ Open `http://localhost:3000` on your phone or desktop browser.
   - Mobile browsers block `navigator.mediaDevices.getUserMedia` on plain `http://` LAN IPs (except `http://localhost`). Use `https://` or a local tunnel when testing live WebRTC video on a physical phone.
 - **Gemini API Error (`503 Service Unavailable` / Missing Key)**:
   - Verify `GEMINI_API_KEY` is set in `.env.local` on the server (or configured in **Settings**). WasteWise will never invent a fake AI identification when the provider fails; it displays a clear error with Retry, Retake, and Manual Search options.
+  - If the configured model is overloaded or no longer available, image identification checks the models enabled for the API key and tries up to two listed Flash models that support content generation. Successful primary-model scans do not incur extra requests.

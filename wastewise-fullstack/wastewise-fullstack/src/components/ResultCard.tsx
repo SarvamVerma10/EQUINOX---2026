@@ -60,6 +60,21 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const searchCorpus = `${rawCategory} ${rawItemName} ${rawExplanation} ${(item.components || []).map(c => `${c.name} ${c.material}`).join(' ')}`.toLowerCase();
 
   const getStreamTheme = (): StreamTheme => {
+    if (directStream === 'UNRESOLVED' || (item as any)?.confidence === 'low') {
+      return {
+        badgeLabel: 'IDENTIFICATION NEEDED',
+        badgeBg: 'bg-slate-600',
+        badgeText: 'text-white',
+        cardBg: 'bg-slate-100/80',
+        cardBorder: 'border-slate-300',
+        iconBg: 'bg-slate-600',
+        titleColor: 'text-slate-950',
+        binTitle: 'Cannot safely classify this item yet',
+        binSubtitle: 'Try a clearer photo or enter the item name and material. No disposal category has been assumed.',
+        icon: HelpCircle
+      };
+    }
+
     // 1. Organic & Compost (PRIORITY LOCK: Banana peels and food scraps are NEVER recyclable)
     if (directStream === 'COMPOST_ORGANIC' || /banana|peel|fruit|apple|vegetable|food scrap|kitchen waste|organic|compost|wet waste/i.test(searchCorpus)) {
       return {
@@ -191,12 +206,38 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const BinIcon = theme.icon;
 
   const displayItemName = rawItemName.trim() || 'Scanned Waste Item';
+  const handleCardPointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === 'touch') return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width;
+    const y = (event.clientY - bounds.top) / bounds.height;
+    event.currentTarget.style.setProperty('--ww-rx', `${(0.5 - y) * 7}deg`);
+    event.currentTarget.style.setProperty('--ww-ry', `${(x - 0.5) * 10}deg`);
+  };
+  const resetCardTilt = (event: React.PointerEvent<HTMLElement>) => {
+    event.currentTarget.style.setProperty('--ww-rx', '0deg');
+    event.currentTarget.style.setProperty('--ww-ry', '0deg');
+  };
 
   return (
     <article
       aria-label={`Waste guidance for ${displayItemName}`}
-      className="w-full bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300"
+      className="ww-result-card w-full bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300"
+      onPointerMove={handleCardPointerMove}
+      onPointerLeave={resetCardTilt}
     >
+      <div className="ww-result-banner" data-stream={String(directStream || 'UNRESOLVED')}>
+        <div className="ww-result-art" aria-hidden="true"><BinIcon /></div>
+        <div className="ww-result-banner-copy">
+          <span>{status === 'recommendation_ready' ? 'LOCAL GUIDE MATCH' : 'CHECK NEEDED'}</span>
+          <h2>{theme.badgeLabel}</h2>
+          <p>{theme.binTitle}</p>
+        </div>
+        <span className="ww-result-confidence">
+          {item?.confidence ? `${item.confidence} confidence` : 'Confidence unavailable'}
+        </span>
+      </div>
+
       {/* Top Bar with Context and Actions */}
       <div className="px-6 sm:px-7 pt-5 pb-3 flex items-center justify-between border-b border-stone-100 bg-stone-50/50">
         <div className="flex items-center gap-2">
@@ -273,7 +314,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </span>
               <span className="inline-flex items-center gap-1 text-xs font-bold text-stone-800 bg-white/90 px-2.5 py-1 rounded-full border border-stone-200/80 shadow-2xs">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                Verified Municipal Guideline
+                {evidence?.length ? 'Verified Municipal Guideline' : 'No matching local rule'}
               </span>
             </div>
 

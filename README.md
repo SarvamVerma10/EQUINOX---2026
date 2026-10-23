@@ -26,7 +26,7 @@ The WasteWise Backend Engine is an API-first, deterministic waste-sorting decisi
 ## Tech Stack & Runtime
 
 - **Runtime**: Node.js (>= 20.x), TypeScript (strict mode enabled).
-- **AI SDK**: `@google/genai` (Gemini 2.5 Flash multimodal models).
+- **AI SDK**: `@google/genai` (Gemini 3.8 Flash multimodal model by default).
 - **Database**: Firebase Cloud Firestore (Admin SDK) with deterministic in-memory adapter for offline testing.
 - **Validation**: Zod (Schema validation for all requests, responses, and LLM structured outputs).
 - **File Ingestion**: Multer for PDF/TXT documents and image inputs.
@@ -95,7 +95,7 @@ Populate the values:
 PORT=8080
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.8-flash
 FIREBASE_PROJECT_ID=wastewise-hackathon
 # Optional: path or inline JSON of your Firebase serviceAccountKey.json
 FIREBASE_SERVICE_ACCOUNT_KEY=

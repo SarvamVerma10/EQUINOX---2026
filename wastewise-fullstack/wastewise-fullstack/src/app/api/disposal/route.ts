@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  DEMO_CAMPUS_GUIDE,
   evaluateDisposalWithGuide,
   validateDisposalResponseSchema
 } from "@/lib/core-engine.mjs";
+import { getActiveGuide } from "@/lib/guide-store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const activeGuide = customGuide !== undefined ? customGuide : DEMO_CAMPUS_GUIDE;
+    const activeGuide = customGuide !== undefined ? customGuide : getActiveGuide();
     const result = evaluateDisposalWithGuide({
       identification,
       selectedComponent: selectedComponent || null,

@@ -36,6 +36,9 @@ export interface AnalysisResponse {
     name: string;
     alternatives: string[];
     components: ComponentItem[];
+    material?: string;
+    confidence?: 'high' | 'medium' | 'low';
+    universalStream?: string;
   };
   clarification: ClarificationBlock;
   recommendation: RecommendationBlock | null;

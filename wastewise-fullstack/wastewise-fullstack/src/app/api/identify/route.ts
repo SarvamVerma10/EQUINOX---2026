@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeWasteImageWithGemini, fallbackUniversalExtraction } from "@/lib/gemini-service";
+import {
+  analyzeWasteImageWithGemini,
+  fallbackUniversalExtraction,
+  isGeminiModelNotFound
+} from "@/lib/gemini-service";
 
 const MAX_BYTES = Number(process.env.MAX_IMAGE_UPLOAD_BYTES || 8 * 1024 * 1024);
 
@@ -61,6 +65,18 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error("Identify route error:", err);
+    const errorMessage = err instanceof Error ? err.message : null;
+    const providerQuotaExceeded = Boolean(
+      (err && typeof err === "object" && (err.status === 429 || err.code === 429)) ||
+      (errorMessage && /RESOURCE_EXHAUSTED|quota exceeded|rate limit|429 Too Many Requests/i.test(errorMessage))
+    );
+    const providerTimedOut = errorMessage
+      ? /DEADLINE_EXCEEDED|deadline expired|timed out|operation was aborted|aborterror/i.test(errorMessage)
+      : false;
+    const providerUnavailable = errorMessage
+      ? /UNAVAILABLE|high demand|Gemini models? .*overloaded|503 Service Unavailable/i.test(errorMessage)
+      : false;
+    const modelNotFound = isGeminiModelNotFound(err);
     return NextResponse.json(
       {
         status: "error",
@@ -69,9 +85,19 @@ export async function POST(req: NextRequest) {
         clarificationQuestion: null,
         instructions: [],
         evidence: null,
-        reason: err?.message || "AI identification service unavailable."
+        reason: modelNotFound
+          ? "No compatible Gemini model is available for this API key. Check model access in Google AI Studio and try again."
+          : providerQuotaExceeded
+          ? "Gemini image-identification quota is exhausted for this API key. Wait for the quota to reset or increase the key's Gemini API quota. You can use manual item search in the meantime."
+          : providerUnavailable
+          ? "Image identification is temporarily busy. Please try again in a moment."
+          : providerTimedOut
+            ? "Image identification timed out at the AI provider. Please retry with a clear, close-up photo."
+          : errorMessage || "AI identification service unavailable."
       },
-      { status: 500 }
+      {
+        status: providerQuotaExceeded ? 429 : modelNotFound || providerUnavailable ? 503 : providerTimedOut ? 504 : 500
+      }
     );
   }
 }

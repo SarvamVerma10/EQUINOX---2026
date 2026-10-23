@@ -8,7 +8,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   ALLOWED_ORIGINS: z.string().default('*'),
   GEMINI_API_KEY: z.string().optional().default(''),
-  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-3.8-flash'),
   FIREBASE_PROJECT_ID: z.string().optional().default('wastewise-hackathon'),
   FIREBASE_SERVICE_ACCOUNT_KEY: z.string().optional(),
   FIRESTORE_EMULATOR_HOST: z.string().optional(),

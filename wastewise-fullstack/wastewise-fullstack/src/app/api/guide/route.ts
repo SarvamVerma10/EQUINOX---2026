@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DEMO_CAMPUS_GUIDE, parseGuideDocumentText } from "@/lib/core-engine.mjs";
-
-let currentActiveGuide: any = DEMO_CAMPUS_GUIDE;
-const guideVersionHistory: any[] = [DEMO_CAMPUS_GUIDE];
+import { parseGuideDocumentText } from "@/lib/core-engine.mjs";
+import { activateGuide, getActiveGuide, getGuideVersions } from "@/lib/guide-store";
 
 export async function GET() {
+  const activeGuide = getActiveGuide();
   return NextResponse.json({
-    activeGuide: currentActiveGuide,
-    versions: guideVersionHistory.map((g) => ({
+    activeGuide,
+    versions: getGuideVersions().map((g) => ({
       id: g.id,
       guideName: g.guideName,
       localityName: g.localityName,
@@ -49,8 +48,7 @@ export async function POST(req: NextRequest) {
 
   if (action === "activate") {
     parsed.guide.isActive = true;
-    currentActiveGuide = parsed.guide;
-    guideVersionHistory.unshift(parsed.guide);
+    activateGuide(parsed.guide);
   }
 
   return NextResponse.json({

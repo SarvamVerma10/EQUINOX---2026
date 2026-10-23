@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { forwardRef, useImperativeHandle, useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, RefreshCw, Zap, Image as ImageIcon, Search, AlertCircle, Sparkles, CheckCircle2, UploadCloud } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
 import type { AnalysisResponse } from '../types/api';
@@ -11,6 +11,13 @@ interface CameraUploadProps {
   onAnalysisSuccess: (result: AnalysisResponse) => void;
   onError: (error: Error) => void;
   isLoading: boolean;
+}
+
+export interface CameraUploadHandle {
+  openCamera: () => void;
+  openFilePicker: () => void;
+  analyzeText: (query: string, label?: string) => Promise<void>;
+  analyzeImageFile: (image: File) => Promise<void>;
 }
 
 /**
@@ -47,13 +54,13 @@ async function compressImage(image: Blob, maxDimension = 768, quality = 0.75): P
   }
 }
 
-export const CameraUpload: React.FC<CameraUploadProps> = ({
+export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   localityId,
   onAnalysisStart,
   onAnalysisSuccess,
   onError,
   isLoading
-}) => {
+}, ref) => {
   const [cameraActive, setCameraActive] = useState<boolean>(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [torchActive, setTorchActive] = useState<boolean>(false);
@@ -186,6 +193,15 @@ export const CameraUpload: React.FC<CameraUploadProps> = ({
     }
   };
 
+  const analyzeImageFile = async (image: File) => {
+    if (!image.type.startsWith('image/')) {
+      onError(new Error('Please select a valid image file.'));
+      return;
+    }
+    stopCamera();
+    await processAndSubmitImage(image);
+  };
+
   /**
    * Capture live frame from Webcam canvas ensuring video stream is ready
    */
@@ -311,6 +327,13 @@ export const CameraUpload: React.FC<CameraUploadProps> = ({
       onError(err);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    openCamera: () => { void startCamera(); },
+    openFilePicker: () => fileInputRef.current?.click(),
+    analyzeText: (query, label = query) => runPreset(label, query),
+    analyzeImageFile
+  }), [analyzeImageFile, isLoading, localityId]);
 
   return (
     <div
@@ -573,4 +596,6 @@ export const CameraUpload: React.FC<CameraUploadProps> = ({
       </div>
     </div>
   );
-};
+});
+
+CameraUpload.displayName = 'CameraUpload';
