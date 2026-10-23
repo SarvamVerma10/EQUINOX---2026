@@ -48,7 +48,18 @@ export function errorHandler(
     return;
   }
 
-  // Handle Gemini API errors (rate limit, quota, network)
+  // Handle Gemini API errors (rate limit, quota, network, invalid key)
+  if (err.message && (err.message.includes('API key not valid') || err.message.includes('API_KEY_INVALID'))) {
+    res.status(400).json({
+      error: {
+        code: 'INVALID_GEMINI_API_KEY',
+        message: 'Invalid Google Gemini API key. Please add a valid GEMINI_API_KEY in your .env file (get a free key from https://aistudio.google.com/).',
+        requestId
+      }
+    });
+    return;
+  }
+
   if (err.message && (err.message.includes('quota') || err.message.includes('429') || err.message.includes('RESOURCE_EXHAUSTED'))) {
     res.status(503).json({
       error: {
