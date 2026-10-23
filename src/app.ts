@@ -31,6 +31,25 @@ export function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+  // Root welcome / discovery route
+  app.get('/', (_req, res) => {
+    res.json({
+      service: 'WasteWise Backend API',
+      status: 'online',
+      version: '1.0.0',
+      frontendUrl: 'http://localhost:3000',
+      healthCheck: '/api/v1/health',
+      endpoints: [
+        'GET /api/v1/health',
+        'GET /api/v1/guides/active',
+        'POST /api/v1/analyze',
+        'POST /api/v1/analyze/:analysisId/clarify',
+        'POST /api/v1/analyze/:analysisId/correction',
+        'GET /api/v1/history'
+      ]
+    });
+  });
+
   // API v1 routes
   app.use('/api/v1', apiRouter);
 
