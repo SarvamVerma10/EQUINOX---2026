@@ -289,6 +289,19 @@ export function fallbackUniversalExtraction(queryOrHint: string): Identification
 }
 
 /**
+ * Helper to wrap any async call with a strict timeout in milliseconds
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timer);
+  });
+}
+
+/**
  * Universal Gemini Multimodal Vision Extraction
  */
 export async function analyzeWasteImageWithGemini(
@@ -329,12 +342,15 @@ export async function analyzeWasteImageWithGemini(
 
   // 1. Clean Base64: Strip data URL prefix and whitespace/newlines
   let cleanBase64 = base64Image;
-  const prefixMatch = base64Image.match(/^data:([a-zA-Z0-9/+-]+);base64,([\s\S]+)$/);
-  if (prefixMatch) {
-    if (prefixMatch[1]) mimeType = prefixMatch[1];
-    cleanBase64 = prefixMatch[2];
+  if (cleanBase64.includes("base64,")) {
+    const parts = cleanBase64.split("base64,");
+    cleanBase64 = parts[1] || parts[0];
+    const mimeMatch = parts[0].match(/data:([^;]+)/);
+    if (mimeMatch && mimeMatch[1]) {
+      mimeType = mimeMatch[1].trim();
+    }
   } else {
-    cleanBase64 = base64Image.replace(/^data:image\/[a-zA-Z0-9.+_-]+;base64,/, "");
+    cleanBase64 = base64Image.replace(/^data:[^;]+;base64,/, "");
   }
   cleanBase64 = cleanBase64.replace(/[\r\n\s]/g, "");
 
@@ -345,16 +361,9 @@ export async function analyzeWasteImageWithGemini(
 
   const ai = new GoogleGenAI({ apiKey });
 
-  // 3. Multi-model resilience: Primary is gemini-3.8-flash
-  const candidateModels = [
-    process.env.GEMINI_MODEL || "gemini-3.8-flash",
-    "gemini-3.8-flash",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
-  ];
-  // Deduplicate
-  const modelsToTry = Array.from(new Set(candidateModels));
+  // 3. Multi-model resilience: Primary is gemini-3.8-flash, backup is gemini-2.0-flash
+  const primaryModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  const modelsToTry = [primaryModel, "gemini-2.0-flash"].filter((m, i, arr) => arr.indexOf(m) === i);
 
   const promptText = `Analyze the visual pixels of this waste image as an expert municipal waste auditor.
 Follow the strict 3-step waste sorting contract:
@@ -375,7 +384,7 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
 
   for (const modelName of modelsToTry) {
     try {
-      const response = await ai.models.generateContent({
+      const apiCall = ai.models.generateContent({
         model: modelName,
         contents: [
           {
@@ -392,6 +401,12 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         }
       });
 
+      const response = await withTimeout(
+        apiCall,
+        7000,
+        `Gemini Vision API timed out after 7 seconds for model '${modelName}'`
+      );
+
       const rawText = response.text || "";
       let parsed: any;
       try {
@@ -400,84 +415,86 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
         if (cleaned.startsWith("```")) cleaned = cleaned.replace(/^```\s*/, "").replace(/\s*```$/, "");
         parsed = JSON.parse(cleaned);
       } catch (e) {
-        continue;
+        throw new Error(`Failed to parse Gemini JSON output: ${rawText.substring(0, 100)}`);
       }
 
-      if (parsed && (parsed.itemName || parsed.name)) {
-        let itemName = (parsed.itemName || parsed.name || "Scanned Waste Item").trim();
-        let universalStream = [
-          "RECYCLABLE_CLEAN",
-          "COMPOST_ORGANIC",
-          "HAZARDOUS_EWASTE",
-          "MEDICAL_SANITARY",
-          "TEXTILE_DONATION",
-          "CONSTRUCTION_INERT",
-          "SOFT_PLASTIC_SPECIAL",
-          "RESIDUAL_LANDFILL"
-        ].includes(parsed.universalStream)
-          ? parsed.universalStream
-          : "RESIDUAL_LANDFILL";
-
-        // Double-Lock Safety Rules:
-        const combinedSafetyCheck = `${itemName} ${parsed.material || ""} ${(parsed.components || []).map((c: any) => `${c.name} ${c.material}`).join(" ")}`.toLowerCase();
-
-        // Safety 1: Batteries and Electronics MUST be HAZARDOUS_EWASTE
-        if (/battery|lithium|32700|18650|cell|power bank|accumulator|charger|circuit board|vape/i.test(combinedSafetyCheck)) {
-          universalStream = "HAZARDOUS_EWASTE";
-        }
-
-        // Safety 2: Fruit peels, banana peels, and food scraps MUST be COMPOST_ORGANIC
-        if (/banana|peel|fruit|apple|vegetable|kitchen waste|food scrap|citrus|rind|tea bag|coffee ground/i.test(combinedSafetyCheck)) {
-          universalStream = "COMPOST_ORGANIC";
-        }
-
-        let customPrepSteps = Array.isArray(parsed.customPrepSteps) && parsed.customPrepSteps.length > 0
-          ? parsed.customPrepSteps
-          : [];
-
-        if (universalStream === "HAZARDOUS_EWASTE") {
-          const hasFire = customPrepSteps.some((s: string) => /fire|trash|recycling/i.test(s));
-          const hasTape = customPrepSteps.some((s: string) => /tape|terminal/i.test(s));
-          const hasDrop = customPrepSteps.some((s: string) => /drop|e-waste|kiosk|depot|center/i.test(s));
-          const safetySteps: string[] = [];
-          if (!hasFire) safetySteps.push("1. Do not place in regular trash or recycling due to fire risk.");
-          if (!hasTape) safetySteps.push("2. Tape terminals with clear tape.");
-          if (!hasDrop) safetySteps.push("3. Drop off at an authorized E-Waste center.");
-          if (safetySteps.length > 0) {
-            customPrepSteps = [...safetySteps, ...customPrepSteps];
-          }
-        } else if (universalStream === "COMPOST_ORGANIC") {
-          const hasSticker = customPrepSteps.some((s: string) => /sticker|label/i.test(s));
-          const hasWetBin = customPrepSteps.some((s: string) => /green|compost|wet/i.test(s));
-          const bioSteps: string[] = [];
-          if (!hasSticker) bioSteps.push("1. Remove any plastic produce stickers or rubber bands.");
-          if (!hasWetBin) bioSteps.push("2. Place directly into the Green Municipal Wet / Compost bin.");
-          if (bioSteps.length > 0) {
-            customPrepSteps = [...bioSteps, ...customPrepSteps];
-          }
-        }
-
-        return {
-          name: itemName,
-          itemName,
-          material: parsed.material || "Identified Material",
-          universalStream: universalStream as UniversalWasteStream,
-          confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "high",
-          isUnclearImage: Boolean(parsed.isUnclearImage),
-          components: Array.isArray(parsed.components) && parsed.components.length > 0
-            ? parsed.components.map((c: any) => ({
-                name: c.name || "Main Component",
-                material: c.material || "Material",
-                recyclability: c.recyclability || "Municipal Stream"
-              }))
-            : [{ name: "Main Body", material: parsed.material || "Material", recyclability: universalStream }],
-          customPrepSteps: customPrepSteps.length > 0
-            ? customPrepSteps
-            : ["Empty contents and check local guidelines before binning."],
-          clarificationQuestion: parsed.clarificationQuestion || null,
-          needsClarification: Boolean(parsed.needsClarification)
-        };
+      if (!parsed || !(parsed.itemName || parsed.name)) {
+        throw new Error("Gemini response missing mandatory 'itemName' property.");
       }
+
+      let itemName = String(parsed.itemName || parsed.name).trim();
+      let universalStream = [
+        "RECYCLABLE_CLEAN",
+        "COMPOST_ORGANIC",
+        "HAZARDOUS_EWASTE",
+        "MEDICAL_SANITARY",
+        "TEXTILE_DONATION",
+        "CONSTRUCTION_INERT",
+        "SOFT_PLASTIC_SPECIAL",
+        "RESIDUAL_LANDFILL"
+      ].includes(parsed.universalStream)
+        ? parsed.universalStream
+        : "RESIDUAL_LANDFILL";
+
+      // Double-Lock Safety Rules:
+      const combinedSafetyCheck = `${itemName} ${parsed.material || ""} ${(parsed.components || []).map((c: any) => `${c.name} ${c.material}`).join(" ")}`.toLowerCase();
+
+      // Safety 1: Batteries and Electronics MUST be HAZARDOUS_EWASTE
+      if (/battery|lithium|32700|18650|cell|power bank|accumulator|charger|circuit board|vape/i.test(combinedSafetyCheck)) {
+        universalStream = "HAZARDOUS_EWASTE";
+      }
+
+      // Safety 2: Fruit peels, banana peels, and food scraps MUST be COMPOST_ORGANIC
+      if (/banana|peel|fruit|apple|vegetable|kitchen waste|food scrap|citrus|rind|tea bag|coffee ground/i.test(combinedSafetyCheck)) {
+        universalStream = "COMPOST_ORGANIC";
+      }
+
+      let customPrepSteps = Array.isArray(parsed.customPrepSteps) && parsed.customPrepSteps.length > 0
+        ? parsed.customPrepSteps
+        : [];
+
+      if (universalStream === "HAZARDOUS_EWASTE") {
+        const hasFire = customPrepSteps.some((s: string) => /fire|trash|recycling/i.test(s));
+        const hasTape = customPrepSteps.some((s: string) => /tape|terminal/i.test(s));
+        const hasDrop = customPrepSteps.some((s: string) => /drop|e-waste|kiosk|depot|center/i.test(s));
+        const safetySteps: string[] = [];
+        if (!hasFire) safetySteps.push("1. Do not place in regular trash or recycling due to fire risk.");
+        if (!hasTape) safetySteps.push("2. Tape terminals with clear tape.");
+        if (!hasDrop) safetySteps.push("3. Drop off at an authorized E-Waste center.");
+        if (safetySteps.length > 0) {
+          customPrepSteps = [...safetySteps, ...customPrepSteps];
+        }
+      } else if (universalStream === "COMPOST_ORGANIC") {
+        const hasSticker = customPrepSteps.some((s: string) => /sticker|label/i.test(s));
+        const hasWetBin = customPrepSteps.some((s: string) => /green|compost|wet/i.test(s));
+        const bioSteps: string[] = [];
+        if (!hasSticker) bioSteps.push("1. Remove any plastic produce stickers or rubber bands.");
+        if (!hasWetBin) bioSteps.push("2. Place directly into the Green Municipal Wet / Compost bin.");
+        if (bioSteps.length > 0) {
+          customPrepSteps = [...bioSteps, ...customPrepSteps];
+        }
+      }
+
+      return {
+        name: itemName,
+        itemName,
+        material: parsed.material || "Identified Material",
+        universalStream: universalStream as UniversalWasteStream,
+        confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "high",
+        isUnclearImage: Boolean(parsed.isUnclearImage),
+        components: Array.isArray(parsed.components) && parsed.components.length > 0
+          ? parsed.components.map((c: any) => ({
+              name: c.name || "Main Component",
+              material: c.material || "Material",
+              recyclability: c.recyclability || "Municipal Stream"
+            }))
+          : [{ name: "Main Body", material: parsed.material || "Material", recyclability: universalStream }],
+        customPrepSteps: customPrepSteps.length > 0
+          ? customPrepSteps
+          : ["Empty contents and check local guidelines before binning."],
+        clarificationQuestion: parsed.clarificationQuestion || null,
+        needsClarification: Boolean(parsed.needsClarification)
+      };
     } catch (err: any) {
       lastError = err;
       // If 404 or model not found, try next candidate model
@@ -488,6 +505,13 @@ ${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
     }
   }
 
-  console.warn("Gemini vision API error, applying universal heuristic classification:", lastError?.message || lastError);
-  return fallbackUniversalExtraction(textOrRegionHint || "Scanned Waste Item");
+  // If user provided a specific manual text hint/query, fall back to text extractor
+  if (textOrRegionHint && textOrRegionHint.trim().length > 0 && textOrRegionHint !== "Scanned Waste Item") {
+    return fallbackUniversalExtraction(textOrRegionHint.trim());
+  }
+
+  // Strict API Error: Never lie to the user with a false recycling default
+  throw new Error(
+    `AI vision identification failed or timed out: ${lastError?.message || "Service unavailable"}. Please retake the photo or enter the item description manually.`
+  );
 }

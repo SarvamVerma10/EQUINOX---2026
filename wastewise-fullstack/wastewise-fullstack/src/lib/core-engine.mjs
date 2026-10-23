@@ -524,7 +524,6 @@ export function getDynamicRuleForStream(stream, targetName, targetMaterial) {
         excerpt: "Non-recyclable composite packaging, heavily contaminated materials, and general non-hazardous waste belong in the municipal Residual Landfill stream."
       };
     case "RECYCLABLE_CLEAN":
-    default:
       return {
         id: "rule-dyn-dry",
         universalStreams: ["RECYCLABLE_CLEAN"],
@@ -539,6 +538,22 @@ export function getDynamicRuleForStream(stream, targetName, targetMaterial) {
         page: 8,
         section: "Section 3.4 — Accepted Rigid Plastics & Clean Packaging",
         excerpt: "Clean, empty beverage cans, container glass bottles, PET/HDPE rigid plastic containers, and clean paperboard are accepted in the Blue Dry Recyclables bin."
+      };
+    default:
+      return {
+        id: "rule-dyn-residual",
+        universalStreams: ["RESIDUAL_LANDFILL"],
+        category: "special_handling",
+        subtype: "residual_landfill",
+        physicalBinNote: "Local authority physical bin: Black / Gray Residual Waste Bin",
+        instructions: [
+          "Ensure no hazardous batteries, electronics, or compostable food scraps are mixed in.",
+          "Bag non-recyclable composite packaging tightly.",
+          "Place in the designated municipal Residual Landfill bin."
+        ],
+        page: 22,
+        section: "Section 8.1 — Non-Recyclable Residual Waste",
+        excerpt: "Non-recyclable composite packaging, heavily contaminated materials, and general non-hazardous waste belong in the municipal Residual Landfill stream."
       };
   }
 }
@@ -705,14 +720,22 @@ export function evaluateDisposalWithGuide({
     };
   }
 
-  // 6. Search active guide rules (Deterministic Universal Stream Binding)
+  // 6. Search active guide rules (Strict Dynamic Universal Stream Binding)
   const normName = targetName.toLowerCase().trim();
   const normMat = targetMaterial.toLowerCase().trim();
 
+  // Strict Dynamic Stream Binding & Hazard Protection
+  let effectiveStream = identification.universalStream;
+  if (/battery|lithium|32700|18650|cell|power bank|accumulator|charger|circuit board|vape/i.test(`${normName} ${normMat}`)) {
+    effectiveStream = "HAZARDOUS_EWASTE";
+  } else if (/banana|peel|fruit|apple|vegetable|kitchen waste|food scrap|citrus|rind|tea bag|coffee ground/i.test(`${normName} ${normMat}`)) {
+    effectiveStream = "COMPOST_ORGANIC";
+  }
+
   let matchedRules = [];
 
-  if (identification.universalStream) {
-    const stream = identification.universalStream;
+  if (effectiveStream) {
+    const stream = effectiveStream;
 
     // Filter activeGuide rules that belong to this universal stream
     const streamRules = activeGuide.rules.filter((rule) => {
