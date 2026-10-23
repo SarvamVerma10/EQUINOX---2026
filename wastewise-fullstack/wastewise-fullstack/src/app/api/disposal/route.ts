@@ -10,6 +10,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { identification, selectedComponent, customGuide } = body || {};
 
+    if (identification) {
+      identification.material = identification.material || 'General Material';
+      identification.confidence = ['high', 'medium', 'low'].includes(identification.confidence)
+        ? identification.confidence
+        : 'high';
+      identification.components = Array.isArray(identification.components)
+        ? identification.components
+        : [];
+    }
+
     if (!identification || typeof identification.name !== "string") {
       return NextResponse.json(
         { status: "error", reason: "Valid item identification is required before checking the local guide." },
