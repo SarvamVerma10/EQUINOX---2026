@@ -132,7 +132,7 @@
       "localityId": "metro-central",
       "categoryName": "Hazardous Waste",
       "applicableMaterials": ["Alkaline", "Lithium Ion", "Heavy Metals", "LiFePO4"],
-      "itemAliases": ["Battery", "AA Battery", "Lithium Battery", "Laptop Battery", "3.2V 32700 Lithium-Ion Cylindrical Battery", "Rechargeable Cell"],
+      "itemAliases": ["Battery", "AA Battery", "Lithium Battery", "Laptop Battery", "3.2V 32700 Lithium-Ion Cylindrical Battery", "32700 Lithium-Ion Battery Cells", "32700", "Battery Cell", "Rechargeable Cell"],
       "allowedConditions": ["Intact", "Taped terminals for lithium"],
       "preparationSteps": ["Tape exposed battery terminals with clear tape to prevent short circuits", "Bring to Household Hazardous Waste (HHW) depot or red battery kiosk", "Never put in regular bins due to fire hazard"],
       "sourceExcerpt": "Household and rechargeable batteries pose serious fire hazards in garbage trucks and are strictly prohibited in curbside bins. Deliver to HHW depots or red battery kiosks.",

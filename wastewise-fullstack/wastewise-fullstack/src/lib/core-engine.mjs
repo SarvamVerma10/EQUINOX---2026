@@ -108,14 +108,14 @@ export const DEMO_CAMPUS_GUIDE = {
     {
       id: "rule-haz-1",
       universalStreams: ["HAZARDOUS_EWASTE"],
-      itemKeywords: ["aa battery", "aaa battery", "alkaline battery", "lithium battery", "button cell", "power bank", "rechargeable battery"],
-      materialKeywords: ["alkaline cell", "lithium-ion", "heavy metal battery", "electrochemical cell"],
+      itemKeywords: ["aa battery", "aaa battery", "alkaline battery", "lithium battery", "button cell", "power bank", "rechargeable battery", "battery cell", "cylindrical cell", "lithium-ion battery cells", "32700"],
+      materialKeywords: ["alkaline cell", "lithium-ion", "heavy metal battery", "electrochemical cell", "lifepo4"],
       subtype: "battery_and_accumulators",
       category: "special_handling",
       instructions: [
-        "NEVER place batteries in regular wet or dry household bins (fire and toxic leakage risk).",
-        "Tape the terminals of lithium or 9V batteries with clear non-conductive tape.",
-        "Drop off only at the designated Campus E-Waste & Battery Collection Kiosk (Admin Block Ground Floor)."
+        "1. Do not place in regular trash or recycling due to fire risk.",
+        "2. Tape terminals with clear tape.",
+        "3. Drop off at an authorized E-Waste center."
       ],
       page: 14,
       section: "Section 5.1 — Batteries & Electrochemical Cells (Special Handling)",
@@ -487,10 +487,13 @@ export function evaluateDisposalWithGuide({
   }
 
   // 4. Multi-component packaging clarification (if not yet resolved by user)
+  // Hazardous e-waste and single units must NEVER ask the user to separate integrated components
   if (
+    identification.universalStream !== "HAZARDOUS_EWASTE" &&
     Array.isArray(identification.components) &&
     identification.components.length > 1 &&
-    !selectedComponent
+    !selectedComponent &&
+    (identification.needsClarification || identification.components.some(c => c.queryTerm))
   ) {
     return {
       status: "clarification_needed",
@@ -572,26 +575,63 @@ export function evaluateDisposalWithGuide({
   const normName = targetName.toLowerCase().trim();
   const normMat = targetMaterial.toLowerCase().trim();
 
-  const matchedRules = activeGuide.rules.filter((rule) => {
-    const itemHit = (rule.itemKeywords || []).some(
-      (kw) => normName.includes(kw.toLowerCase()) || kw.toLowerCase().includes(normName)
-    );
-    const matHit = (rule.materialKeywords || []).some(
-      (mw) => normMat.includes(mw.toLowerCase())
-    );
-    return itemHit || (matHit && normName.length > 3 && (rule.itemKeywords || []).some((kw) => normMat.includes(kw.toLowerCase())));
-  });
+  let matchedRules = [];
 
-  // Tier 2: Universal Stream Fallback (deterministic municipal rule matching when Tier 1 keyword has no match)
-  if (matchedRules.length === 0 && identification.universalStream) {
-    const stream = identification.universalStream;
-    const streamRule = activeGuide.rules.find((r) =>
-      (Array.isArray(r.universalStreams) && r.universalStreams.includes(stream)) ||
-      r.universalStream === stream ||
-      r.stream === stream
-    );
-    if (streamRule) {
-      matchedRules.push(streamRule);
+  // ABSOLUTE SAFETY RULE: If Gemini or identification classifies this item as HAZARDOUS_EWASTE,
+  // the rule engine must NEVER return a recycling or landfill bin. It must lock onto
+  // the E-Waste / Hazardous drop-off rule chunk.
+  if (identification.universalStream === "HAZARDOUS_EWASTE") {
+    const hazardousRules = activeGuide.rules.filter((rule) => {
+      const isStream = Array.isArray(rule.universalStreams) && rule.universalStreams.includes("HAZARDOUS_EWASTE");
+      const isHazSubtype = /battery|accumulator|ewaste|electronic|chemical|hazard/i.test(rule.subtype || "");
+      const isHazSection = /battery|e-waste|electronic|hazardous/i.test(rule.section || "");
+      return (isStream || isHazSubtype || isHazSection) && rule.category === "special_handling";
+    });
+
+    if (hazardousRules.length > 0) {
+      // Pick best keyword match within hazardous rules (e.g. battery vs cable vs charger)
+      const bestHazMatch = hazardousRules.find((rule) =>
+        (rule.itemKeywords || []).some((kw) => normName.includes(kw.toLowerCase()) || kw.toLowerCase().includes(normName))
+      ) || hazardousRules[0];
+
+      matchedRules.push(bestHazMatch);
+    }
+  } else {
+    // Standard Keyword & Material matching
+    matchedRules = activeGuide.rules.filter((rule) => {
+      const itemHit = (rule.itemKeywords || []).some(
+        (kw) => normName.includes(kw.toLowerCase()) || kw.toLowerCase().includes(normName)
+      );
+      const matHit = (rule.materialKeywords || []).some(
+        (mw) => normMat.includes(mw.toLowerCase())
+      );
+      return itemHit || (matHit && normName.length > 3 && (rule.itemKeywords || []).some((kw) => normMat.includes(kw.toLowerCase())));
+    });
+
+    // If universalStream is provided and multiple rules matched, prioritize rules aligned with universalStream
+    if (matchedRules.length > 1 && identification.universalStream) {
+      const stream = identification.universalStream;
+      const alignedRules = matchedRules.filter((r) =>
+        (Array.isArray(r.universalStreams) && r.universalStreams.includes(stream)) ||
+        r.universalStream === stream ||
+        r.stream === stream
+      );
+      if (alignedRules.length > 0) {
+        matchedRules = alignedRules;
+      }
+    }
+
+    // Tier 2: Universal Stream Fallback (deterministic municipal rule matching when Tier 1 keyword has no match)
+    if (matchedRules.length === 0 && identification.universalStream) {
+      const stream = identification.universalStream;
+      const streamRule = activeGuide.rules.find((r) =>
+        (Array.isArray(r.universalStreams) && r.universalStreams.includes(stream)) ||
+        r.universalStream === stream ||
+        r.stream === stream
+      );
+      if (streamRule) {
+        matchedRules.push(streamRule);
+      }
     }
   }
 

@@ -36,29 +36,41 @@ export interface IdentificationResult {
 const SYSTEM_INSTRUCTION = `You are WasteWise's multimodal waste identification & material decomposition engine.
 Your task is to analyze ANY waste object (from camera photo, packaging, label, or text) and output a structured, evidence-grounded decomposition.
 
-STRICT CLASSIFICATION RULES:
-1. Identify the EXACT, descriptive item name (e.g. "3.2V 32700 Lithium-Ion Cylindrical Battery", "Cracked Ceramic Coffee Mug", "Clean Corrugated Cardboard Box", "Greasy Pizza Delivery Box", "Cotton T-Shirt", "Paracetamol Aluminum/PVC Blister Pack"). NEVER use generic placeholders like "Captured Waste Item".
-2. Classify the item into EXACTLY ONE of the following 8 Universal Municipal Waste Streams:
-   - RECYCLABLE_CLEAN: Clean rigid plastics (#1, #2, #5), metal/aluminum cans, glass bottles/jars, dry clean paper/cardboard.
-   - COMPOST_ORGANIC: Food scraps, vegetable/fruit peels, coffee grounds, greasy/soiled paper & pizza boxes, organic biomass.
-   - HAZARDOUS_EWASTE: Batteries (lithium, alkaline), electronic devices, charging cables, vapes, CFL/LED bulbs, paint, chemicals.
-   - MEDICAL_SANITARY: Medicine blister packs, expired pharmaceuticals, syringes, test strips, masks, bandages, sanitary products.
-   - TEXTILE_DONATION: Clothing, shoes, fabrics, wearable garments, bed linens, towels.
-   - CONSTRUCTION_INERT: Broken ceramics, porcelain mugs/plates, window/mirror glass, clay pots, concrete, tiles.
-   - SOFT_PLASTIC_SPECIAL: Plastic grocery bags, flexible food wrappers, chip packets, bubble wrap, multi-layer foil pouches.
-   - RESIDUAL_LANDFILL: Poly-coated single-use hot paper cups, heavily contaminated packaging, composite non-recyclable trash.
-3. List the actual physical components of the item with name, material, and recyclability. NEVER output "General Packaging Material".
-4. Provide 2 to 3 specific, actionable preparation steps tailored to the exact item (e.g., "Tape battery terminals with clear tape to prevent short circuits", "Empty residual liquids and lightly rinse").
-5. Return ONLY a valid JSON object matching this schema:
+You must follow a STRICT 3-STEP SCANNING CONTRACT for every single item:
+
+### STEP 1: ITEM IDENTIFICATION
+- Accurately name the precise item detected with high technical specificity (e.g., "32700 Lithium-Ion Battery Cells", "Cracked Ceramic Coffee Mug", "Clean Corrugated Cardboard Box", "Greasy Pizza Delivery Box"). NEVER use generic placeholders like "Captured Waste Item" or "Scanned Object".
+- Break down the item into its physical components and constituent materials (e.g., Steel Outer Casing, Copper/Aluminum Terminals, Lithium Iron Phosphate).
+
+### STEP 2: WASTE CLASSIFICATION (ONE OF 8 UNIVERSAL MUNICIPAL STREAMS)
+Classify into ONE AND ONLY ONE of the following 8 universal municipal streams:
+- HAZARDOUS_EWASTE: MUST trigger for all batteries (lithium-ion, alkaline, button cells, 32700 cells), electronic devices, charging cables, power banks, vapes, e-cigarettes, CFL/LED bulbs, chemicals, paint. (CRITICAL SAFETY RULE: NEVER classify batteries or electronics as RECYCLABLE_CLEAN or RESIDUAL_LANDFILL!).
+- RECYCLABLE_CLEAN: Clean rigid plastics (#1 PET, #2 HDPE, #5 PP), aluminum beverage cans, steel food tins, container glass bottles/jars, dry clean paper/cardboard.
+- COMPOST_ORGANIC: Food scraps, vegetable/fruit peels, coffee grounds, greasy/soiled paper & pizza boxes, organic biomass.
+- MEDICAL_SANITARY: Medicine blister packs, expired pharmaceuticals, syringes, sharps, test strips, masks, bandages, diapers.
+- TEXTILE_DONATION: Clothing, shoes, fabrics, wearable garments, bed linens, towels.
+- CONSTRUCTION_INERT: Broken ceramics, porcelain mugs/plates, window/mirror glass, clay pots, concrete, tiles, masonry.
+- SOFT_PLASTIC_SPECIAL: Plastic grocery bags, flexible wrappers, chip packets, bubble wrap, multi-layer foil pouches.
+- RESIDUAL_LANDFILL: Poly-coated single-use hot paper cups, heavily contaminated packaging, composite non-recyclable trash.
+
+### STEP 3: PROPER DISPOSAL & PREPARATION
+- Provide clear, item-specific safety and preparation instructions tailored to the detected object.
+- For HAZARDOUS_EWASTE (especially batteries): explicitly include:
+  1. "Do not place in regular trash or recycling due to fire risk."
+  2. "Tape terminals with clear tape."
+  3. "Drop off at an authorized E-Waste center."
+
+OUTPUT JSON SCHEMA:
+Return ONLY a valid JSON object matching this schema:
 {
   "itemName": "string",
   "material": "string",
-  "universalStream": "RECYCLABLE_CLEAN" | "COMPOST_ORGANIC" | "HAZARDOUS_EWASTE" | "MEDICAL_SANITARY" | "TEXTILE_DONATION" | "CONSTRUCTION_INERT" | "SOFT_PLASTIC_SPECIAL" | "RESIDUAL_LANDFILL",
+  "universalStream": "HAZARDOUS_EWASTE" | "RECYCLABLE_CLEAN" | "COMPOST_ORGANIC" | "MEDICAL_SANITARY" | "TEXTILE_DONATION" | "CONSTRUCTION_INERT" | "SOFT_PLASTIC_SPECIAL" | "RESIDUAL_LANDFILL",
   "confidence": "high" | "medium" | "low",
   "components": [
     { "name": "string", "material": "string", "recyclability": "string" }
   ],
-  "customPrepSteps": ["string"],
+  "customPrepSteps": ["string", "string", "string"],
   "needsClarification": boolean,
   "clarificationQuestion": string or null
 }`;
@@ -71,8 +83,8 @@ export function fallbackUniversalExtraction(queryOrHint: string): Identification
 
   if (q.includes("battery") || q.includes("lithium") || q.includes("alkaline") || q.includes("32700") || q.includes("cell")) {
     return {
-      name: "3.2V 32700 Lithium-Ion Cylindrical Battery",
-      itemName: "3.2V 32700 Lithium-Ion Cylindrical Battery",
+      name: "32700 Lithium-Ion Battery Cells",
+      itemName: "32700 Lithium-Ion Battery Cells",
       material: "Lithium Iron Phosphate (LiFePO4) & Steel Casing",
       universalStream: "HAZARDOUS_EWASTE",
       confidence: "high",
@@ -81,9 +93,9 @@ export function fallbackUniversalExtraction(queryOrHint: string): Identification
         { name: "Electrode Terminals", material: "Copper & Aluminum Contacts", recyclability: "Special Hazardous E-Waste Stream" }
       ],
       customPrepSteps: [
-        "Cover both positive and negative terminals with clear tape to prevent accidental short circuits.",
-        "Do NOT place in regular household trash or blue recycling bins due to fire hazard.",
-        "Drop off at a verified battery collection depot, electronics retailer, or campus hazardous waste kiosk."
+        "1. Do not place in regular trash or recycling due to fire risk.",
+        "2. Tape terminals with clear tape.",
+        "3. Drop off at an authorized E-Waste center."
       ],
       clarificationQuestion: null,
       needsClarification: false
@@ -318,9 +330,11 @@ export async function analyzeWasteImageWithGemini(
   // Deduplicate
   const modelsToTry = Array.from(new Set(candidateModels));
 
-  const promptText = textOrRegionHint
-    ? `Identify this waste item or material. User Context: "${textOrRegionHint}". Decompose packaging and classify into one of the 8 universal municipal streams.`
-    : `Identify this waste item or material from the photo. Decompose packaging and classify into one of the 8 universal municipal streams.`;
+  const promptText = `Follow the strict 3-step waste scanning contract:
+- Step 1: Item Identification: Accurately name the precise item detected (e.g., if batteries or cylindrical cells are visible, specify "32700 Lithium-Ion Battery Cells") and physical materials.
+- Step 2: Waste Classification: Classify into EXACTLY ONE universal stream. If any battery, cell, electronics, cable, or vape is detected, it MUST be classified as HAZARDOUS_EWASTE (NEVER RECYCLABLE_CLEAN or RESIDUAL_LANDFILL).
+- Step 3: Proper Disposal & Preparation: Provide clear item-specific steps (for batteries: 1. Do not place in regular trash or recycling due to fire risk. 2. Tape terminals with clear tape. 3. Drop off at an authorized E-Waste center).
+${textOrRegionHint ? `User context/hint: "${textOrRegionHint}"` : ""}`;
 
   let lastError: any = null;
 
@@ -355,8 +369,8 @@ export async function analyzeWasteImageWithGemini(
       }
 
       if (parsed && (parsed.itemName || parsed.name)) {
-        const itemName = (parsed.itemName || parsed.name || "Scanned Waste Item").trim();
-        const universalStream = [
+        let itemName = (parsed.itemName || parsed.name || "Scanned Waste Item").trim();
+        let universalStream = [
           "RECYCLABLE_CLEAN",
           "COMPOST_ORGANIC",
           "HAZARDOUS_EWASTE",
@@ -368,6 +382,29 @@ export async function analyzeWasteImageWithGemini(
         ].includes(parsed.universalStream)
           ? parsed.universalStream
           : "RESIDUAL_LANDFILL";
+
+        // Safety enforcement: If the item name, material, or components indicate battery, lithium, 32700, cell, or electronics, lock onto HAZARDOUS_EWASTE
+        const combinedSafetyCheck = `${itemName} ${parsed.material || ""} ${(parsed.components || []).map((c: any) => `${c.name} ${c.material}`).join(" ")}`.toLowerCase();
+        if (/battery|lithium|32700|18650|cell|power bank|accumulator|charger|circuit board|vape/i.test(combinedSafetyCheck)) {
+          universalStream = "HAZARDOUS_EWASTE";
+        }
+
+        let customPrepSteps = Array.isArray(parsed.customPrepSteps) && parsed.customPrepSteps.length > 0
+          ? parsed.customPrepSteps
+          : [];
+
+        if (universalStream === "HAZARDOUS_EWASTE") {
+          const hasFire = customPrepSteps.some((s: string) => /fire|trash|recycling/i.test(s));
+          const hasTape = customPrepSteps.some((s: string) => /tape|terminal/i.test(s));
+          const hasDrop = customPrepSteps.some((s: string) => /drop|e-waste|kiosk|depot|center/i.test(s));
+          const safetySteps: string[] = [];
+          if (!hasFire) safetySteps.push("1. Do not place in regular trash or recycling due to fire risk.");
+          if (!hasTape) safetySteps.push("2. Tape terminals with clear tape.");
+          if (!hasDrop) safetySteps.push("3. Drop off at an authorized E-Waste center.");
+          if (safetySteps.length > 0) {
+            customPrepSteps = [...safetySteps, ...customPrepSteps];
+          }
+        }
 
         return {
           name: itemName,
@@ -383,8 +420,8 @@ export async function analyzeWasteImageWithGemini(
                 recyclability: c.recyclability || "Municipal Stream"
               }))
             : [{ name: "Main Body", material: parsed.material || "Material", recyclability: universalStream }],
-          customPrepSteps: Array.isArray(parsed.customPrepSteps) && parsed.customPrepSteps.length > 0
-            ? parsed.customPrepSteps
+          customPrepSteps: customPrepSteps.length > 0
+            ? customPrepSteps
             : ["Empty contents and check local guidelines before binning."],
           clarificationQuestion: parsed.clarificationQuestion || null,
           needsClarification: Boolean(parsed.needsClarification)
