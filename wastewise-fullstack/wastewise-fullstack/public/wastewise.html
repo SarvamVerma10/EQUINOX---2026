@@ -170,7 +170,14 @@
       line-height: 1.08;
     }
 
-    .hidden { display: none !important; }
+    .hidden { display: none; }
+    @media (min-width: 640px) {
+      .sm\:inline-flex { display: inline-flex !important; }
+    }
+    @media (min-width: 768px) {
+      .md\:flex { display: flex !important; }
+      .md\:hidden { display: none !important; }
+    }
     .sr-only {
       position: absolute;
       width: 1px;
@@ -262,6 +269,147 @@
     }
     .category-card-icon {
       transition: transform var(--dur-ui) var(--ease-out-expo);
+    }
+
+    /* =========================================================================
+       ACETERNITY UI 3D CARD EFFECT (CardContainer / CardBody / CardItem)
+       ========================================================================= */
+    .ac-card-container {
+      perspective: 1000px;
+      -webkit-perspective: 1000px;
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 6px 0;
+    }
+    .ac-card-body {
+      position: relative;
+      width: 100%;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 220ms cubic-bezier(0.03, 0.98, 0.52, 0.99), box-shadow 360ms var(--ease-out-expo), border-color 300ms ease;
+      will-change: transform;
+      background: linear-gradient(155deg, rgba(18, 25, 42, 0.92) 0%, rgba(10, 14, 24, 0.96) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: 0 22px 48px -18px rgba(0, 0, 0, 0.78), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .ac-card-body > * {
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+    }
+    .ac-card-container[data-tilt-rest="left"] .ac-card-body:not(.is-hovered) {
+      transform: rotateZ(-1.1deg);
+    }
+    .ac-card-container[data-tilt-rest="right"] .ac-card-body:not(.is-hovered) {
+      transform: rotateZ(1.1deg);
+    }
+    .ac-card-container[data-tilt-rest="slight"] .ac-card-body:not(.is-hovered) {
+      transform: rotateZ(-0.5deg) translateY(3px);
+    }
+    .ac-card-container[data-entered="true"] .ac-card-body {
+      border-color: var(--card-accent, rgba(94, 234, 212, 0.55));
+      box-shadow:
+        0 34px 72px -18px var(--card-glow, rgba(52, 211, 153, 0.36)),
+        0 0 0 1px var(--card-accent, rgba(94, 234, 212, 0.4)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    .ac-card-item {
+      transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translate3d(0px, 0px, 0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+      will-change: transform;
+    }
+    .ac-card-glare {
+      position: absolute;
+      inset: 0;
+      border-radius: 28px;
+      pointer-events: none;
+      background: radial-gradient(
+        380px circle at var(--glare-x, 50%) var(--glare-y, 30%),
+        var(--card-glow, rgba(66, 133, 244, 0.22)),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 280ms ease;
+    }
+    .ac-card-container[data-entered="true"] .ac-card-glare {
+      opacity: 1;
+    }
+    .ac-flashcard-stage {
+      position: relative;
+      height: 156px;
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.55);
+    }
+    .ac-card-container[data-entered="true"] .ac-flashcard-stage {
+      box-shadow: 0 26px 48px -12px var(--card-glow, rgba(0, 0, 0, 0.75));
+    }
+    .ac-flashcard-back {
+      display: none;
+    }
+    .ac-card-container[data-flipped="true"] .ac-flashcard-front {
+      display: none;
+    }
+    .ac-card-container[data-flipped="true"] .ac-flashcard-back {
+      display: block;
+      animation: capturePop 280ms var(--ease-out-expo) forwards;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ac-card-body,
+      .ac-card-item {
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* =========================================================================
+       ACETERNITY UI SQUIGGLY TEXT (SVG Turbulence + Displacement Filter Engine)
+       Ported from https://ui.aceternity.com/registry/squiggly-text-demo.json
+       ========================================================================= */
+    .ac-squiggly-text {
+      display: inline-block;
+      will-change: filter;
+      transform: translateZ(0);
+    }
+    .ac-squiggly-hover:hover .ac-squiggly-target {
+      filter: url(#ac-squiggly-subtle-1);
+    }
+    .history-hero-banner {
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      background:
+        radial-gradient(520px 220px at 88% 12%, rgba(52, 211, 153, 0.16), transparent 65%),
+        radial-gradient(460px 240px at 10% 90%, rgba(66, 133, 244, 0.18), transparent 65%),
+        linear-gradient(155deg, rgba(15, 23, 42, 0.92) 0%, rgba(9, 13, 24, 0.96) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 22px 50px -22px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .history-item-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      background: linear-gradient(155deg, rgba(18, 25, 42, 0.86) 0%, rgba(11, 16, 28, 0.92) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      transition: transform 220ms var(--ease-out-expo), border-color 220ms ease, box-shadow 260ms var(--ease-out-expo);
+    }
+    .history-item-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(94, 234, 212, 0.35);
+      box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.75);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ac-squiggly-text,
+      .ac-squiggly-hover:hover .ac-squiggly-target {
+        filter: none !important;
+      }
     }
 
     /* =========================================================================
@@ -644,40 +792,35 @@
 
     @media (max-width: 767px) {
       .scroll-story-track {
-        height: auto;
+        height: 240vh;
       }
       .scroll-story-sticky {
-        position: relative;
-        top: 0;
-        height: auto;
-        min-height: 0;
-        max-height: none;
-        gap: 16px;
-      }
-      .story-atmosphere-aurora,
-      .story-atmosphere-bloom-b,
-      .story-atmosphere-bloom-c {
-        animation: none;
-      }
-      .story-stage {
-        gap: 12px;
-        padding-bottom: 0;
-      }
-      .story-beat {
-        position: relative;
-        top: auto;
-        inset: auto;
-        opacity: 1 !important;
-        transform: none !important;
-        padding: 16px;
-        border: 1px solid rgba(94, 234, 212, 0.16);
-        border-radius: 20px;
-        background: rgba(6, 24, 22, 0.62);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        top: 72px;
+        height: calc(100vh - 144px);
+        height: calc(100dvh - 144px);
+        min-height: 400px;
+        max-height: 580px;
+        padding: 18px;
       }
       .story-orb-rig {
-        display: none;
+        width: 124px;
+        height: 124px;
+        margin: -34px 0 0;
+      }
+      .story-orb-icon {
+        font-size: 2rem;
+      }
+      .story-beat {
+        top: calc(50% + 50px);
+        padding: 8px 12px 4px;
+      }
+      .story-beat h2 {
+        font-size: 2.1rem;
+        line-height: 0.95;
+      }
+      .story-beat p {
+        margin-top: 6px;
+        font-size: 0.82rem;
       }
     }
 
@@ -781,7 +924,7 @@
         <span id="guide-mode-pill" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 shrink-0">
           Demo Guide
         </span>
-        <span id="active-guide-summary" class="font-mono text-[11px] text-slate-300 truncate">
+        <span id="active-guide-summary" class="sr-only">
           GreenValley &amp; Sohna (v2026.2)
         </span>
       </div>
@@ -834,14 +977,11 @@
         <button type="button" id="desk-nav-learn" onclick="switchTab('learn')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-300 hover:text-white">
           <span data-i18n="navLearn">Learn</span>
         </button>
-        <button type="button" id="desk-nav-settings" onclick="switchTab('settings')" class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-300 hover:text-white">
-          <span data-i18n="navSettings">Guide</span>
-        </button>
       </nav>
 
       <div class="flex items-center gap-2">
         <!-- Minimal Locality Indicator -->
-        <div class="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300">
+        <div class="sr-only" aria-hidden="true">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           <span id="home-locality-title" class="font-medium truncate max-w-[120px]">GreenValley &amp; Sohna</span>
           <span id="home-guide-status-badge" class="sr-only">Demo</span>
@@ -937,18 +1077,6 @@
                 </button>
                 <button type="button" onclick="quickAnalyzeSample('sanitary_pad')" class="text-xs font-medium px-3 py-1 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all">
                   🩹 Sanitary Pad <span class="sr-only">(Yellow Sanitary)</span>
-                </button>
-                <button type="button" onclick="quickAnalyzeSample('residual_wrapper')" class="text-xs font-medium px-3 py-1 rounded-full bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 border border-slate-500/30 transition-all">
-                  🗑️ Laminated Wrapper <span class="sr-only">(Grey General)</span>
-                </button>
-                <button type="button" onclick="quickAnalyzeSample('instant_noodle_packet')" class="text-xs font-medium px-3 py-1 rounded-full bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/30 transition-all">
-                  🍜 Instant Noodle Packet <span class="sr-only">(Multi-Part)</span>
-                </button>
-                <button type="button" onclick="quickAnalyzeSample('used_syringe')" class="text-xs font-medium px-3 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 transition-all">
-                  💉 Used Syringe <span class="sr-only">(Biomedical)</span>
-                </button>
-                <button type="button" onclick="quickAnalyzeSample('ceramic_mug')" class="text-xs font-medium px-3 py-1 rounded-full bg-slate-700/40 hover:bg-slate-700/60 text-slate-300 border border-slate-600 transition-all">
-                  ☕ Broken Ceramic Mug <span class="sr-only">(No Rule / Grey)</span>
                 </button>
               </div>
             </div>
@@ -1379,13 +1507,14 @@
       </div>
 
       <!-- ================================================================= -->
-      <!-- PHASE 6: MINIMALIST INTERACTIVE CATEGORY SHOWCASE                 -->
+      <!-- PHASE 6: ACETERNITY 3D FLASHCARD CATEGORY SHOWCASE                -->
       <!-- ================================================================= -->
       <div class="reveal-item space-y-6" style="margin-top: 20px !important;">
-        <div class="flex items-end justify-between">
+        <div class="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <span class="section-kicker text-[11px] text-blue-300 block mb-2">The bins</span>
+            <span class="section-kicker text-[11px] text-blue-300 block mb-2">3D Street-Smart Flashcards · Hover to levitate · Flip for ward rules</span>
             <h2 class="font-poster text-3xl sm:text-4xl text-white" data-i18n="categoryLegendHeading">Waste Categories</h2>
+            <p class="hand-note text-base mt-1">tilt any card in 3D space or flip it to peek at the ward rulebook</p>
             <p class="sr-only" data-i18n="categoryLegendSub"></p>
           </div>
           <button type="button" onclick="switchTab('learn')" class="text-xs font-semibold text-blue-400 hover:text-white transition-colors">
@@ -1393,55 +1522,17 @@
           </button>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div onclick="quickAnalyzeSample('banana_peel')" class="cursor-pointer group category-card rounded-2xl p-4 glass-pill flex flex-col justify-between gap-4 hover:-translate-y-1 transition-all">
-            <div class="category-card-icon w-10 h-10 rounded-xl grad-biodegradable flex items-center justify-center text-lg shadow-md">🌱</div>
-            <div>
-              <h3 class="font-display text-sm font-bold text-white" data-i18n="catBioShort">Biodegradable / Wet</h3>
-              <p class="text-[11px] text-slate-400 mt-0.5">Peels &amp; scraps</p>
-            </div>
-          </div>
-
-          <div onclick="quickAnalyzeSample('aluminum_can')" class="cursor-pointer group category-card rounded-2xl p-4 glass-pill flex flex-col justify-between gap-4 hover:-translate-y-1 transition-all">
-            <div class="category-card-icon w-10 h-10 rounded-xl grad-dry_recyclable flex items-center justify-center text-lg shadow-md">♻️</div>
-            <div>
-              <h3 class="font-display text-sm font-bold text-white" data-i18n="catDryShort">Dry / Recyclable</h3>
-              <p class="text-[11px] text-slate-400 mt-0.5">Paper, cans, PET</p>
-            </div>
-          </div>
-
-          <div onclick="quickAnalyzeSample('aa_battery')" class="cursor-pointer group category-card rounded-2xl p-4 glass-pill flex flex-col justify-between gap-4 hover:-translate-y-1 transition-all">
-            <div class="category-card-icon w-10 h-10 rounded-xl grad-special_handling flex items-center justify-center text-lg shadow-md">🛡️</div>
-            <div>
-              <h3 class="font-display text-sm font-bold text-white" data-i18n="catHazShort">Hazardous / Special Alert</h3>
-              <p class="text-[11px] text-slate-400 mt-0.5">Batteries &amp; sharps</p>
-            </div>
-          </div>
-
-          <div onclick="quickAnalyzeSample('sanitary_pad')" class="cursor-pointer group category-card rounded-2xl p-4 glass-pill flex flex-col justify-between gap-4 hover:-translate-y-1 transition-all">
-            <div class="category-card-icon w-10 h-10 rounded-xl grad-sanitary_medical flex items-center justify-center text-lg shadow-md">🧴</div>
-            <div>
-              <h3 class="font-display text-sm font-bold text-white" data-i18n="catSanitaryShort">Sanitary / Medical Waste</h3>
-              <p class="text-[11px] text-slate-400 mt-0.5">Wrapped hygiene</p>
-            </div>
-          </div>
-
-          <div onclick="quickAnalyzeSample('residual_wrapper')" class="cursor-pointer group category-card rounded-2xl p-4 glass-pill flex flex-col justify-between gap-4 hover:-translate-y-1 transition-all">
-            <div class="category-card-icon w-10 h-10 rounded-xl grad-general_waste flex items-center justify-center text-lg shadow-md">🗑️</div>
-            <div>
-              <h3 class="font-display text-sm font-bold text-white" data-i18n="catGenShort">General Waste</h3>
-              <p class="text-[11px] text-slate-400 mt-0.5">Laminates</p>
-            </div>
-          </div>
-
-          <div onclick="quickAnalyzeSample('ceramic_mug')" class="cursor-pointer group category-card rounded-2xl p-4 glass-pill border-dashed flex flex-col justify-between gap-4 hover:-translate-y-1 transition-all">
-            <div class="category-card-icon w-10 h-10 rounded-xl bg-slate-700 text-white flex items-center justify-center text-lg shadow-md">❓</div>
-            <div>
-              <h3 class="font-display text-sm font-bold text-white" data-i18n="catGreyShort">Unresolved / Clarify</h3>
-              <p class="text-[11px] text-slate-400 mt-0.5">Needs check</p>
-            </div>
-          </div>
+        <!-- Hidden i18n hooks preserved for localization compatibility -->
+        <div class="sr-only" aria-hidden="true">
+          <span data-i18n="catBioShort">Biodegradable / Wet</span>
+          <span data-i18n="catDryShort">Dry / Recyclable</span>
+          <span data-i18n="catHazShort">Hazardous / Special Alert</span>
+          <span data-i18n="catSanitaryShort">Sanitary / Medical Waste</span>
+          <span data-i18n="catGenShort">General Waste</span>
+          <span data-i18n="catGreyShort">Unresolved / Clarify</span>
         </div>
+
+        <div id="home-3d-flashcards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
 
       <!-- ================================================================= -->
@@ -1460,25 +1551,95 @@
     </section>
 
     <!-- =================================================================== -->
-    <!-- VIEW 2: SCAN HISTORY                                                -->
+    <!-- VIEW 2: SCAN HISTORY (WITH ACETERNITY UI SQUIGGLY TEXT DEMO)        -->
     <!-- =================================================================== -->
-    <section id="view-history" class="hidden space-y-4">
-      <div class="rounded-3xl p-6 glass-pill space-y-4">
-        <div class="flex items-center justify-between gap-3">
-          <h1 class="font-display text-xl font-bold text-white" data-i18n="historyTitle">Saved Scan History</h1>
-          <button type="button" onclick="clearAllHistory()" class="px-3.5 py-1.5 rounded-full bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 text-xs font-bold">
-            🗑️ <span data-i18n="clearHistoryBtn">Clear History</span>
-          </button>
+    <section id="view-history" class="hidden space-y-6">
+      <!-- Hidden SVG Turbulence & Displacement Filters for Aceternity SquigglyText -->
+      <svg class="sr-only" width="0" height="0" aria-hidden="true">
+        <defs id="ac-squiggly-svg-defs"></defs>
+      </svg>
+
+      <div class="rounded-3xl p-6 sm:p-8 glass-pill space-y-6">
+        <!-- Aceternity UI Squiggly Text Demo Banner -->
+        <div class="history-hero-banner p-6 sm:p-8 space-y-5">
+          <div class="flex flex-wrap items-center justify-end gap-3">
+            <button
+              type="button"
+              onclick="clearAllHistory()"
+              class="px-3.5 py-1.5 rounded-full bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 text-xs font-bold transition-colors"
+            >
+              🗑️ <span data-i18n="clearHistoryBtn">Clear History</span>
+            </button>
+          </div>
+
+          <div class="space-y-2">
+            <h1 class="font-poster text-3xl sm:text-5xl text-white tracking-wide leading-tight">
+              <span data-i18n="historyTitle">Saved Scan History</span>
+              <span class="block text-xl sm:text-3xl mt-1.5 font-display font-extrabold text-slate-200 normal-case">
+                How many items have you
+                <span
+                  class="ac-squiggly-text text-emerald-400 underline decoration-wavy decoration-emerald-400/60 underline-offset-4 px-1"
+                  data-squiggly-role="hero"
+                >sorted right today?</span>
+              </span>
+            </h1>
+            <p class="hand-note text-base text-sky-300">
+              every peel, can &amp; battery you’ve checked against your ward rulebook — animated with SVG turbulence displacement
+            </p>
+          </div>
+
+          <!-- Live Squiggly Metrics Strip -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div class="rounded-2xl bg-white/5 border border-white/10 p-3.5 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Total Logged</p>
+                <p class="text-xs text-slate-300 mt-0.5">All ward checks</p>
+              </div>
+              <span
+                id="history-stat-total"
+                class="ac-squiggly-text font-poster text-3xl text-blue-400"
+                data-squiggly-role="subtle"
+              >0</span>
+            </div>
+
+            <div class="rounded-2xl bg-white/5 border border-white/10 p-3.5 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Verified Rules</p>
+                <p class="text-xs text-slate-300 mt-0.5">Matched to bin</p>
+              </div>
+              <span
+                id="history-stat-verified"
+                class="ac-squiggly-text font-poster text-3xl text-emerald-400"
+                data-squiggly-role="subtle"
+              >0</span>
+            </div>
+
+            <div class="rounded-2xl bg-white/5 border border-white/10 p-3.5 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] font-mono uppercase tracking-wider text-slate-400">Special / Caution</p>
+                <p class="text-xs text-slate-300 mt-0.5">Hazard &amp; Sanitary</p>
+              </div>
+              <span
+                id="history-stat-special"
+                class="ac-squiggly-text font-poster text-3xl text-amber-300"
+                data-squiggly-role="subtle"
+              >0</span>
+            </div>
+          </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-2.5">
-          <input
-            id="history-search-input"
-            type="text"
-            placeholder="Search history..."
-            class="flex-1 px-4 py-2 rounded-full bg-white/5 border border-white/15 text-sm text-white placeholder-slate-400 focus-ring"
-            oninput="renderHistoryView()"
-          />
+        <!-- Search & Category Filter Bar -->
+        <div class="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+          <div class="relative flex-1">
+            <input
+              id="history-search-input"
+              type="text"
+              placeholder="Search history by item, material, or bin..."
+              class="w-full pl-9 pr-4 py-2.5 rounded-full bg-white/5 border border-white/15 text-sm text-white placeholder-slate-400 focus-ring"
+              oninput="renderHistoryView()"
+            />
+            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
           <div class="flex flex-wrap gap-1.5">
             <button type="button" onclick="setHistoryFilter('all')" id="hist-filter-all" class="px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500 text-white">All</button>
             <button type="button" onclick="setHistoryFilter('biodegradable')" id="hist-filter-biodegradable" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white/5 text-slate-300 hover:bg-white/10">🌱 Wet</button>
@@ -1490,87 +1651,51 @@
           </div>
         </div>
 
-        <div id="history-items-container" class="space-y-2.5"></div>
+        <div id="history-items-container" class="space-y-3"></div>
       </div>
     </section>
 
     <!-- =================================================================== -->
-    <!-- VIEW 3: LEARN SCREEN                                                -->
+    <!-- VIEW 3: LEARN SCREEN (ACETERNITY 3D FLASHCARD DECK)                 -->
     <!-- =================================================================== -->
-    <section id="view-learn" class="hidden space-y-4">
-      <div class="rounded-3xl p-6 glass-pill space-y-5">
-        <h1 class="font-poster text-3xl sm:text-4xl text-white" data-i18n="learnHeading">
-          What goes where
-        </h1>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="rounded-2xl border border-white/10 overflow-hidden bg-white/5">
-            <div class="grad-biodegradable p-3.5 text-white flex items-center gap-2.5">
-              <span class="text-xl">🌱</span>
-              <h3 class="font-display font-bold text-sm">Biodegradable / Wet Waste</h3>
-            </div>
-            <p class="p-3.5 text-xs text-slate-300">
-              Fruit peels, vegetable scraps, and compostable food matter.
-            </p>
+    <section id="view-learn" class="hidden space-y-6">
+      <div class="rounded-3xl p-6 sm:p-8 glass-pill space-y-6">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <span class="section-kicker text-[11px] text-blue-300 block mb-2">Interactive Ward Flashcards · Aceternity 3D Card Deck</span>
+            <h1 class="font-poster text-3xl sm:text-4xl text-white" data-i18n="learnHeading">
+              What goes where
+            </h1>
+            <p class="hand-note text-base mt-1">move your pointer across any card to make its layers float in air, or flip it for the rulebook quote</p>
           </div>
-
-          <div class="rounded-2xl border border-white/10 overflow-hidden bg-white/5">
-            <div class="grad-dry_recyclable p-3.5 text-white flex items-center gap-2.5">
-              <span class="text-xl">♻️</span>
-              <h3 class="font-display font-bold text-sm">Dry Waste / Potentially Recyclable</h3>
-            </div>
-            <p class="p-3.5 text-xs text-slate-300">
-              Clean paper, cardboard, rinsed metal cans, and PET #1 / HDPE #2 bottles.
-            </p>
-          </div>
-
-          <div class="rounded-2xl border border-white/10 overflow-hidden bg-white/5">
-            <div class="grad-special_handling p-3.5 text-white flex items-center gap-2.5">
-              <span class="text-xl">🛡️</span>
-              <h3 class="font-display font-bold text-sm">Hazardous / Special Handling</h3>
-            </div>
-            <p class="p-3.5 text-xs text-slate-300">
-              Batteries, e-waste, chemicals, and clinical sharps requiring dedicated drop-off.
-            </p>
-          </div>
-
-          <div class="rounded-2xl border border-amber-500/30 overflow-hidden bg-white/5">
-            <div class="grad-sanitary_medical p-3.5 text-slate-900 flex items-center gap-2.5">
-              <span class="text-xl">🧴</span>
-              <h3 class="font-display font-bold text-sm text-slate-950">Sanitary / Medical Waste</h3>
-            </div>
-            <p class="p-3.5 text-xs text-slate-300">
-              Wrapped sanitary pads, diapers, and non-sharp dressings.
-            </p>
-          </div>
-
-          <div class="rounded-2xl border border-white/10 overflow-hidden bg-white/5">
-            <div class="grad-general_waste p-3.5 text-white flex items-center gap-2.5">
-              <span class="text-xl">🗑️</span>
-              <h3 class="font-display font-bold text-sm">General Non-Recyclable Waste</h3>
-            </div>
-            <p class="p-3.5 text-xs text-slate-300">
-              Multi-layer laminated wrappers, thermocol, and worn sponges.
-            </p>
-          </div>
-
-          <div class="rounded-2xl border border-dashed border-slate-500 overflow-hidden bg-white/5">
-            <div class="bg-slate-800 p-3.5 text-white flex items-center gap-2.5">
-              <span class="text-xl">❓</span>
-              <h3 class="font-display font-bold text-sm">Unresolved / Clarify</h3>
-            </div>
-            <p class="p-3.5 text-xs text-slate-300">
-              Shown when an image is unclear, multi-part, or not listed in the local guide.
-            </p>
-          </div>
+          <button type="button" onclick="flipAll3DFlashcards()" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-xs font-bold text-white transition-all">
+            ↻ Flip All Flashcards
+          </button>
         </div>
+
+        <div id="learn-3d-flashcards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </section>
 
     <!-- =================================================================== -->
     <!-- VIEW 4: SETTINGS & LOCAL GUIDE MANAGER                              -->
     <!-- =================================================================== -->
-    <section id="view-settings" class="hidden space-y-5">
+    <section id="view-settings" class="hidden space-y-6">
+
+      <!-- 0. Creative 3D Waste Guide Flashcards (Aceternity 3D Card Demo Integration) -->
+      <div class="rounded-3xl p-6 glass-pill space-y-5">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <span class="section-kicker text-[11px] text-emerald-300 block mb-1.5">Active Ward Flashcards · 3D Perspective Deck</span>
+            <h2 class="font-poster text-2xl sm:text-3xl text-white">Local Guide Flashcards</h2>
+            <p class="hand-note text-base mt-0.5">hover to float elements in 3D space · tap "Flip Rule ↻" to inspect the ward bylaw</p>
+          </div>
+          <button type="button" onclick="flipAll3DFlashcards()" class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-xs font-bold text-white transition-all">
+            ↻ Flip All Cards
+          </button>
+        </div>
+        <div id="settings-3d-flashcards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
 
       <!-- 1. Local Guide Manager -->
       <div class="rounded-3xl p-6 glass-pill space-y-4">
@@ -1707,10 +1832,6 @@
     <button type="button" id="mob-nav-learn" onclick="switchTab('learn')" class="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400 font-semibold text-xs">
       <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
       <span data-i18n="navLearn">Learn</span>
-    </button>
-    <button type="button" id="mob-nav-settings" onclick="switchTab('settings')" class="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400 font-semibold text-xs">
-      <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-      <span data-i18n="navSettings">Guide</span>
     </button>
   </nav>
 
@@ -2938,6 +3059,29 @@
         return;
       }
 
+      if (window.parent !== window && currentCapturedImageDataUrl) {
+        isAnalyzing = true;
+        const bridgeButton = document.getElementById("confirm-analyze-btn");
+        const bridgeProgress = document.getElementById("analysis-progress-box");
+        const bridgeProgressBar = document.getElementById("analysis-progress-bar");
+        const bridgeProgressPct = document.getElementById("analysis-pct-text");
+        const bridgeProgressStage = document.getElementById("analysis-stage-text");
+        const bridgeLaser = document.getElementById("active-analysis-laser");
+        if (bridgeButton) bridgeButton.disabled = true;
+        if (bridgeProgress) bridgeProgress.classList.remove("hidden");
+        if (bridgeLaser) bridgeLaser.classList.remove("hidden");
+        if (bridgeProgressBar) bridgeProgressBar.style.width = "40%";
+        if (bridgeProgressPct) bridgeProgressPct.textContent = "40%";
+        if (bridgeProgressStage) bridgeProgressStage.textContent = "Analyzing...";
+        window.parent.postMessage({
+          source: "wastewise-reference",
+          type: "analyze-image",
+          dataUrl: currentCapturedImageDataUrl,
+          filename: document.getElementById("preview-photo-title")?.textContent || "wastewise-photo.jpg"
+        }, window.location.origin);
+        return;
+      }
+
       isAnalyzing = true;
       const btn = document.getElementById("confirm-analyze-btn");
       const progBox = document.getElementById("analysis-progress-box");
@@ -3043,6 +3187,16 @@
       const query = (input.value || "").trim();
       if (!query) {
         showToast("Enter a waste item name.", "ℹ️");
+        return;
+      }
+
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          source: "wastewise-reference",
+          type: "analyze-text",
+          query,
+          label: query
+        }, window.location.origin);
         return;
       }
 
@@ -3207,6 +3361,104 @@
       section.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
+    function renderBackendAnalysis(analysis) {
+      const recommendation = analysis.recommendation || {};
+      const categoryText = [
+        recommendation.category,
+        recommendation.explanation,
+        analysis.item?.universalStream,
+        ...(recommendation.instructions || []),
+        ...(analysis.evidence || []).map((item) => `${item.sectionTitle || ""} ${item.sourceExcerpt || ""}`)
+      ].filter(Boolean).join(" ").toLowerCase().replace(/[_-]+/g, " ");
+      let category = "unresolved";
+      const canonicalCategory = String(recommendation.category || "").toLowerCase().replace(/[_-]+/g, " ");
+      if (/blue\s+(dry|recyclable)|dry\s+(waste|recyclable)|recyclable\s+bin/.test(canonicalCategory)) {
+        category = "dry_recyclable";
+      } else if (/green\s+(wet|municipal)|wet\s+waste|biodegradable\s+bin|compost/.test(canonicalCategory)) {
+        category = "biodegradable";
+      } else if (/grey|gray|general\s+waste|residual\s+waste/.test(canonicalCategory)) {
+        category = "general_waste";
+      } else if (/sanitary|medical|hygiene|diaper|napkin|tampon/.test(canonicalCategory)) {
+        category = "sanitary_medical";
+      } else if (/hazard|special\s+handling|e[\s-]?waste|sharp|syringe|take.?back/.test(canonicalCategory)) {
+        category = "special_handling";
+      } else if (/\bsanitary|medical|hygiene|diaper|napkin|tampon/.test(categoryText)) {
+        category = "sanitary_medical";
+      } else if (/hazard|special handling|e-?waste|battery|chemical|sharp|syringe|take.?back/.test(categoryText)) {
+        category = "special_handling";
+      } else if (/biodegradable|wet waste|organic|compost|green bin|food scrap/.test(categoryText)) {
+        category = "biodegradable";
+      } else if (/dry recyclable|recyclable|recycling|blue dry|pet plastic|cardboard|metal container|clean metal|beverage container/.test(categoryText)) {
+        category = "dry_recyclable";
+      } else if (/general waste|general residual|grey|gray|residual|non.?recyclable/.test(categoryText)) {
+        category = "general_waste";
+      }
+      currentIdentification = {
+        name: analysis.item?.name || "Unidentified item",
+        material: analysis.item?.material || "Unknown",
+        confidence: analysis.item?.confidence || "low",
+        components: analysis.item?.components || []
+      };
+      currentEvaluationResult = {
+        status: analysis.status === "recommendation_ready"
+          ? "recommended"
+          : analysis.status === "clarification_required"
+          ? "clarification_needed"
+          : analysis.status,
+        item: currentIdentification,
+        category,
+        clarificationQuestion: analysis.clarification?.questions?.[0] || null,
+        clarificationOptions: (analysis.item?.components || []).map((component, index) => ({
+          id: String(index),
+          label: component.name,
+          material: component.material,
+          queryTerm: component.name
+        })),
+        instructions: recommendation.instructions || [],
+        evidence: analysis.evidence?.[0] ? {
+          page: analysis.evidence[0].pageNumber,
+          section: analysis.evidence[0].sectionTitle,
+          excerpt: analysis.evidence[0].sourceExcerpt,
+          guideName: "Local Guide",
+          version: "active"
+        } : null,
+        reason: analysis.uncertaintyNotes?.[0] || "Could not verify the correct disposal category from the selected local guide.",
+        physicalBinNote: recommendation.explanation || null
+      };
+      renderResultCard();
+    }
+
+    window.addEventListener("message", (event) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      const message = event.data;
+      if (!message || message.source !== "wastewise-app") return;
+      if (message.type === "analysis-result" && message.analysis) {
+        isAnalyzing = false;
+        const bridgeButton = document.getElementById("confirm-analyze-btn");
+        const bridgeProgress = document.getElementById("analysis-progress-box");
+        const bridgeLaser = document.getElementById("active-analysis-laser");
+        if (bridgeButton) bridgeButton.disabled = false;
+        if (bridgeProgress) bridgeProgress.classList.add("hidden");
+        if (bridgeLaser) bridgeLaser.classList.add("hidden");
+        renderBackendAnalysis(message.analysis);
+      } else if (message.type === "analysis-error") {
+        isAnalyzing = false;
+        const bridgeButton = document.getElementById("confirm-analyze-btn");
+        const bridgeProgress = document.getElementById("analysis-progress-box");
+        const bridgeLaser = document.getElementById("active-analysis-laser");
+        if (bridgeButton) bridgeButton.disabled = false;
+        if (bridgeProgress) bridgeProgress.classList.add("hidden");
+        if (bridgeLaser) bridgeLaser.classList.add("hidden");
+        showToast(message.error || "Analysis failed. Please try again.", "⚠️");
+      } else if (message.type === "analysis-finished") {
+        isAnalyzing = false;
+      }
+    });
+
+    if (window.parent !== window) {
+      window.parent.postMessage({ source: "wastewise-reference", type: "reference-ready" }, window.location.origin);
+    }
+
     function selectClarificationPart(componentId) {
       if (!currentIdentification) return;
       currentEvaluationResult = evaluateDisposalWithGuide({
@@ -3309,39 +3561,99 @@
       const container = document.getElementById("history-items-container");
       if (!container) return;
 
+      // Update live SquigglyText counters in History header
+      const totalEl = document.getElementById("history-stat-total");
+      const verifiedEl = document.getElementById("history-stat-verified");
+      const specialEl = document.getElementById("history-stat-special");
+      if (totalEl) totalEl.textContent = String(scanHistory.length);
+      if (verifiedEl) {
+        verifiedEl.textContent = String(
+          scanHistory.filter((x) => x.status === "recommended" && x.category !== "unresolved").length
+        );
+      }
+      if (specialEl) {
+        specialEl.textContent = String(
+          scanHistory.filter((x) => x.category === "special_handling" || x.category === "sanitary_medical").length
+        );
+      }
+
       const searchVal = (document.getElementById("history-search-input")?.value || "").toLowerCase().trim();
       const filtered = scanHistory.filter((item) => {
         const matchesCat = historyCategoryFilter === "all" || item.category === historyCategoryFilter;
-        const textBlob = `${item.item.name} ${item.item.material} ${item.userCorrection?.correctedItemName || ""}`.toLowerCase();
+        const textBlob = `${item.item.name} ${item.item.material} ${item.physicalBinNote || ""} ${item.userCorrection?.correctedItemName || ""}`.toLowerCase();
         return matchesCat && (!searchVal || textBlob.includes(searchVal));
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="p-6 text-center text-xs text-stone-500 bg-ivory rounded-xl border border-stone-200">No matching records.</div>`;
+        container.innerHTML = `
+          <div class="p-8 text-center rounded-2xl bg-white/5 border border-dashed border-white/15 space-y-2">
+            <p class="font-display text-base font-bold text-white">
+              <span class="ac-squiggly-text text-sky-300" data-squiggly-role="hero">No matching scans in this view</span>
+            </p>
+            <p class="text-xs text-slate-400">Try clearing your search filter or scan a new item on the Home screen.</p>
+          </div>
+        `;
+        if (typeof applySquigglyStepFrame === "function") applySquigglyStepFrame();
         return;
       }
 
       container.innerHTML = "";
       filtered.forEach((entry) => {
         const badgeStyle = getCategoryBadgeClasses(entry.category);
+        const themeObj = CATEGORY_THEMES[entry.category] || UNRESOLVED_STATE_THEME;
+        const displayTitle = entry.userCorrection ? entry.userCorrection.correctedItemName : entry.item.name;
+        const timeStr = new Date(entry.timestamp).toLocaleString([], {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+        const binNote = entry.physicalBinNote || themeObj.shortLabel || "Check Local Guide";
+        const citeNote = entry.evidence
+          ? `p.${entry.evidence.page || "—"} · ${entry.evidence.section || "Local Guide"}`
+          : "Unverified / Needs Clarification";
+
         const row = document.createElement("div");
-        row.className = "p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3";
+        row.className = "history-item-card ac-squiggly-hover p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4";
+        row.style.borderLeft = `4px solid ${themeObj.border || "#4285F4"}`;
         row.innerHTML = `
-          <div class="space-y-0.5 min-w-0">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full ${badgeStyle}">${entry.category.replace("_", " ").toUpperCase()}</span>
-              ${entry.userCorrection ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">Corrected: ${entry.userCorrection.correctedItemName}</span>` : ""}
+          <div class="flex items-start gap-3.5 min-w-0">
+            <div class="w-11 h-11 rounded-2xl ${themeObj.gradClass || "grad-unresolved"} flex items-center justify-center text-lg shrink-0 shadow-md">
+              ${themeObj.emoji || "❓"}
             </div>
-            <h3 class="text-sm font-extrabold text-deepGreen truncate">${entry.item.name}</h3>
-            <p class="text-xs text-stone-500 truncate">${entry.item.material}</p>
+            <div class="space-y-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${badgeStyle}">
+                  ${entry.category.replace("_", " ").toUpperCase()}
+                </span>
+                <span class="text-[11px] font-mono text-slate-400">${timeStr}</span>
+                ${
+                  entry.userCorrection
+                    ? `<span class="ac-squiggly-text text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" data-squiggly-role="subtle">✓ Corrected</span>`
+                    : ""
+                }
+              </div>
+              <h3 class="font-display text-base font-bold text-white truncate">
+                <span class="ac-squiggly-target">${displayTitle}</span>
+              </h3>
+              <div class="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                <span class="truncate">${entry.item.material}</span>
+                <span class="text-slate-600">•</span>
+                <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[11px] font-semibold text-sky-300">
+                  🗑️ ${binNote}
+                </span>
+                <span class="text-[11px] font-mono text-slate-400 truncate">${citeNote}</span>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button type="button" class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-blue-500 text-white text-xs font-bold transition-colors" onclick="openHistoryEntry('${entry.id}')">View</button>
+          <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            <button type="button" class="px-4 py-1.5 rounded-full bg-white/10 hover:bg-blue-500 text-white text-xs font-bold transition-colors" onclick="openHistoryEntry('${entry.id}')">View</button>
             <button type="button" class="px-3.5 py-1.5 rounded-full bg-red-500/15 hover:bg-red-500/30 text-red-300 text-xs font-bold transition-colors" onclick="deleteHistoryEntry('${entry.id}')">Delete</button>
           </div>
         `;
         container.appendChild(row);
       });
+      if (typeof applySquigglyStepFrame === "function") applySquigglyStepFrame();
     }
 
     function openHistoryEntry(id) {
@@ -3767,13 +4079,444 @@
       toastTimer = setTimeout(() => container.classList.add("hidden"), 2800);
     }
 
+
+    // =========================================================================
+    // ACETERNITY UI 3D CARD ENGINE (CardContainer, CardBody, CardItem)
+    // Ported from https://ui.aceternity.com/registry/3d-card-demo.json
+    // =========================================================================
+    const FLASHCARD_DECK_DATA = [
+      {
+        id: "flash-organic",
+        sampleKey: "banana_peel",
+        categoryKey: "biodegradable",
+        cardNumber: "FLASHCARD #01",
+        tagPill: "🌱 Green Wet Bin",
+        title: "Organic & Kitchen Scraps",
+        handNote: "“If it grew on a plant or cooked in a pan, it’s compost fuel.”",
+        summary: "Fruit peels, vegetable trimmings, tea leaves, coffee grounds, and leftover meals.",
+        floatingChips: ["🍌 Banana Peel", "☕ Tea Leaves", "🍎 Apple Core"],
+        ruleSection: "Section 2.1 · Page 4",
+        ruleExcerpt: "Raw fruit peels, vegetable trimmings, and food scraps go into the Biodegradable (Wet Waste) stream without plastic liners.",
+        ruleSteps: ["Drain excess liquid first", "Peel off fruit stickers or ties", "Drop loose into the Green Wet Bin"],
+        gradClass: "grad-biodegradable",
+        accent: "#34D399",
+        glow: "rgba(31, 138, 76, 0.45)",
+        tiltRest: "left"
+      },
+      {
+        id: "flash-recyclable",
+        sampleKey: "aluminum_can",
+        categoryKey: "dry_recyclable",
+        cardNumber: "FLASHCARD #02",
+        tagPill: "♻️ Blue Dry Bin",
+                title: "Clean Dry Recyclables",
+        handNote: "“Rinse the soda, flatten the box — grease ruins the whole bale!”",
+        summary: "Rinsed aluminum cans, PET #1 & HDPE #2 bottles, clean cardboard, and dry outer film.",
+        floatingChips: ["🥫 Soda Can", "📦 Cardboard", "🧴 PET Bottle"],
+        ruleSection: "Section 3.2 & 3.4 · Pages 7–9",
+        ruleExcerpt: "Empty, rinsed aluminum beverage cans, PET (#1) bottles, and unsoiled corrugated cardboard are accepted for dry recovery.",
+        ruleSteps: ["Empty & quick-rinse containers", "Flatten cardboard boxes", "Keep separate from oily food wrappers"],
+        gradClass: "grad-dry_recyclable",
+        accent: "#38BDF8",
+        glow: "rgba(23, 105, 170, 0.45)",
+        tiltRest: "right"
+      },
+      {
+        id: "flash-medical-sanitary",
+        sampleKey: "sanitary_pad",
+        categoryKey: "sanitary_medical",
+        cardNumber: "FLASHCARD #03",
+        tagPill: "🧴 Yellow Sanitary Stream",
+        title: "Sanitary & Hygiene Care",
+        handNote: "“Wrap it snug & mark it clear — protects every sanitation worker.”",
+        summary: "Used sanitary napkins, diapers, tampons, cotton swabs, and non-sharp domestic dressings.",
+        floatingChips: ["🩹 Sanitary Pad", "👶 Diaper", "棉 Cotton Swab"],
+        ruleSection: "Section 6.1 · Page 18",
+        ruleExcerpt: "Used sanitary napkins, tampons, diapers, and domestic bandages must be wrapped securely for the Sanitary / Medical Waste stream.",
+        ruleSteps: ["Wrap securely in leak-proof pouch/paper", "Place in Yellow Sanitary stream", "Never flush or mix with sharps"],
+        gradClass: "grad-sanitary_medical",
+        accent: "#FACC15",
+        glow: "rgba(227, 160, 8, 0.45)",
+        tiltRest: "slight"
+      },
+      {
+        id: "flash-hazardous",
+        sampleKey: "aa_battery",
+        categoryKey: "special_handling",
+        cardNumber: "FLASHCARD #04",
+        tagPill: "🛡️ Kiosk / Take-Back Alert",
+        title: "Hazardous, E-Waste & Sharps",
+        handNote: "“Sparks, mercury & needles never belong in a kitchen bucket.”",
+        summary: "AA/lithium batteries, broken chargers, CFL bulbs, paint tins, and clinical syringes.",
+        floatingChips: ["🔋 AA Battery", "💉 Syringe", "🔌 E-Waste"],
+        ruleSection: "Section 5.1–5.3 · Pages 14–16",
+        ruleExcerpt: "Alkaline/lithium batteries, e-waste, and biomedical sharps require dedicated kiosk or Health Center take-back.",
+        ruleSteps: ["Tape battery terminals or seal sharps", "Never mix into wet or dry household bins", "Drop at E-Waste Kiosk or Health Center"],
+        gradClass: "grad-special_handling",
+        accent: "#FB7185",
+        glow: "rgba(180, 35, 47, 0.48)",
+        tiltRest: "right"
+      },
+      {
+        id: "flash-general",
+        sampleKey: "residual_wrapper",
+        categoryKey: "general_waste",
+        cardNumber: "FLASHCARD #05",
+        tagPill: "🗑️ Grey Residual Bin",
+        title: "General Residual Waste",
+        handNote: "“Shiny foil-lined chip bags can’t be pulped or remelted.”",
+        summary: "Multi-layer metallized chip pouches, thermocol/styrofoam cups, and worn kitchen sponges.",
+        floatingChips: ["🍟 Chip Foil Bag", "🥤 Thermocol", "🧽 Worn Sponge"],
+        ruleSection: "Section 7.1 · Page 21",
+        ruleExcerpt: "Multi-layer metallized pouches, thermocol, and worn sponges belong in the General Non-Recyclable Residual Waste stream.",
+        ruleSteps: ["Shake out trapped food crumbs", "Keep out of the Blue Recyclable bin", "Place in Grey / Black General Waste"],
+        gradClass: "grad-general_waste",
+        accent: "#94A3B8",
+        glow: "rgba(102, 112, 133, 0.42)",
+        tiltRest: "left"
+      },
+      {
+        id: "flash-multipart",
+        sampleKey: "instant_noodle_packet",
+        categoryKey: "unresolved",
+        cardNumber: "FLASHCARD #06",
+        tagPill: "🧩 Split or Clarify",
+        title: "Tricky Multi-Part & Unlisted",
+        handNote: "“Wait — outer wrapper is dry plastic, inner masala pouch is oily!”",
+        summary: "Instant noodle packets, composite items, or broken ceramics not listed in the ward chart.",
+        floatingChips: ["🍜 Noodle Pack", "☕ Ceramic Mug", "❓ Mystery Item"],
+        ruleSection: "Section 3.6 & Clarify Protocol",
+        ruleExcerpt: "Separate clean outer plastic wrappers from oily inner seasoning sachets; pause when a rule is unverified.",
+        ruleSteps: ["Peel apart outer film from soiled sachets", "Pick the specific part in WasteWise", "Never guess when local rules conflict"],
+        gradClass: "grad-unresolved",
+        accent: "#A78BFA",
+        glow: "rgba(109, 93, 246, 0.42)",
+        tiltRest: "slight"
+      }
+    ];
+
+    function buildAceternityFlashcardHTML(card, scopePrefix) {
+      const domId = `${scopePrefix}-${card.id}`;
+      const svgArt = build3DCategorySVG(card.categoryKey);
+      return `
+        <div
+          id="${domId}"
+          class="ac-card-container group/card select-none"
+          data-tilt-rest="${card.tiltRest}"
+          data-entered="false"
+          data-flipped="false"
+          tabindex="0"
+          role="region"
+          aria-label="${card.title} 3D Flashcard"
+          style="--card-accent: ${card.accent}; --card-glow: ${card.glow};"
+        >
+          <div class="ac-card-body flex flex-col justify-between gap-4">
+            <div class="ac-card-glare" aria-hidden="true"></div>
+
+            <!-- Top Row: Kicker + Bin Pill (translateZ: 50) -->
+            <div class="ac-card-item flex items-center justify-between gap-2" data-translate-z="50">
+              <span class="font-mono text-[10px] tracking-widest uppercase text-slate-400">${card.cardNumber}</span>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/10 border border-white/15 text-white shadow-sm">
+                ${card.tagPill}
+              </span>
+            </div>
+
+            <!-- Title & Handwritten Note (translateZ: 65) -->
+            <div class="ac-card-item space-y-1" data-translate-z="65">
+              <h3 class="font-display text-xl font-bold text-white leading-tight">${card.title}</h3>
+              <p class="font-note text-[1.05rem] text-sky-300 leading-snug">${card.handNote}</p>
+            </div>
+
+            <!-- FRONT FACE: 3D Floating Visual Stage + Floating Chips (translateZ: 100) -->
+            <div class="ac-flashcard-front space-y-3.5">
+              <div
+                class="ac-card-item ac-flashcard-stage ${card.gradClass} p-4"
+                data-translate-z="100"
+                data-rotate-x="4"
+                data-rotate-z="-2"
+              >
+                <div class="pointer-events-none absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/20 blur-xl"></div>
+                <div class="pointer-events-none absolute -left-8 -bottom-8 w-28 h-28 rounded-full bg-black/25 blur-xl"></div>
+
+                <div class="relative z-10 flex items-center justify-between w-full gap-3">
+                  <div class="w-20 h-20 rounded-2xl bg-black/25 backdrop-blur-md border border-white/25 p-2.5 flex items-center justify-center shrink-0 shadow-2xl">
+                    ${svgArt}
+                  </div>
+                  <div class="flex flex-col items-end gap-1.5">
+                    ${card.floatingChips.map((chip, idx) => `
+                      <span
+                        class="ac-card-item px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-950/65 text-white border border-white/20 backdrop-blur-md shadow-lg"
+                        data-translate-z="${115 - idx * 12}"
+                      >
+                        ${chip}
+                      </span>
+                    `).join("")}
+                  </div>
+                </div>
+              </div>
+
+              <p class="ac-card-item text-xs text-slate-300 leading-relaxed" data-translate-z="45">
+                ${card.summary}
+              </p>
+            </div>
+
+            <!-- BACK FACE: Flipped Ward Rulebook Excerpt & Steps (translateZ: 85) -->
+            <div class="ac-flashcard-back space-y-3">
+              <div
+                class="ac-card-item rounded-2xl bg-slate-950/90 border border-white/15 p-3.5 space-y-2 shadow-inner"
+                data-translate-z="85"
+              >
+                <div class="flex items-center justify-between text-[11px] font-mono text-sky-300">
+                  <span>📖 Ward Rulebook</span>
+                  <span>${card.ruleSection}</span>
+                </div>
+                <blockquote class="text-xs italic text-slate-200 border-l-2 border-emerald-400 pl-2.5 py-0.5">
+                  "${card.ruleExcerpt}"
+                </blockquote>
+                <ul class="space-y-1 text-[11px] text-slate-300 list-disc pl-4 pt-1">
+                  ${card.ruleSteps.map((st) => `<li>${st}</li>`).join("")}
+                </ul>
+              </div>
+            </div>
+
+            <!-- Footer Actions (translateZ: 40) -->
+            <div class="ac-card-item pt-2 border-t border-white/10 flex items-center justify-between gap-2" data-translate-z="40">
+              <button
+                type="button"
+                onclick="toggle3DFlashcardFlip('${domId}', event)"
+                class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-bold text-slate-200 transition-colors"
+              >
+                ↻ Flip Rule
+              </button>
+              <button
+                type="button"
+                onclick="quickAnalyzeSample('${card.sampleKey}')"
+                class="px-3.5 py-1.5 rounded-xl bg-white text-slate-950 hover:bg-sky-200 text-xs font-extrabold transition-colors shadow-md"
+              >
+                Try in Scanner →
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function applyAceternity3DTransforms(container, isEntered) {
+      const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const items = container.querySelectorAll(".ac-card-item");
+      items.forEach((item) => {
+        if (!isEntered || reduced) {
+          item.style.transform = "translate3d(0px, 0px, 0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)";
+        } else {
+          const tx = Number(item.getAttribute("data-translate-x") || 0);
+          const ty = Number(item.getAttribute("data-translate-y") || 0);
+          const tz = Number(item.getAttribute("data-translate-z") || 0);
+          const rx = Number(item.getAttribute("data-rotate-x") || 0);
+          const ry = Number(item.getAttribute("data-rotate-y") || 0);
+          const rz = Number(item.getAttribute("data-rotate-z") || 0);
+          item.style.transform = `translate3d(${tx}px, ${ty}px, ${tz}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+        }
+      });
+    }
+
+    function bindAceternity3DCards(rootEl = document) {
+      const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      rootEl.querySelectorAll(".ac-card-container").forEach((container) => {
+        if (container.dataset.bound3d === "true") return;
+        container.dataset.bound3d = "true";
+        const body = container.querySelector(".ac-card-body");
+        if (!body) return;
+
+        container.addEventListener("pointerenter", (e) => {
+          if (e.pointerType === "touch") return;
+          container.setAttribute("data-entered", "true");
+          body.classList.add("is-hovered");
+          applyAceternity3DTransforms(container, true);
+        });
+
+        container.addEventListener("pointermove", (e) => {
+          if (reduced || e.pointerType === "touch") return;
+          const rect = container.getBoundingClientRect();
+          const x = (e.clientX - rect.left - rect.width / 2) / 18;
+          const y = (e.clientY - rect.top - rect.height / 2) / 18;
+          const gx = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 100;
+          const gy = ((e.clientY - rect.top) / Math.max(1, rect.height)) * 100;
+          body.style.setProperty("--glare-x", `${gx.toFixed(1)}%`);
+          body.style.setProperty("--glare-y", `${gy.toFixed(1)}%`);
+          body.style.transform = `rotateY(${x.toFixed(2)}deg) rotateX(${(-y).toFixed(2)}deg)`;
+        });
+
+        const resetCard = () => {
+          container.setAttribute("data-entered", "false");
+          body.classList.remove("is-hovered");
+          body.style.transform = "";
+          applyAceternity3DTransforms(container, false);
+        };
+
+        container.addEventListener("pointerleave", resetCard);
+        container.addEventListener("focusin", () => {
+          container.setAttribute("data-entered", "true");
+          body.classList.add("is-hovered");
+          applyAceternity3DTransforms(container, true);
+        });
+        container.addEventListener("focusout", (e) => {
+          if (!container.contains(e.relatedTarget)) resetCard();
+        });
+        container.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          const entered = container.getAttribute("data-entered") === "true";
+          container.setAttribute("data-entered", entered ? "false" : "true");
+          body.classList.toggle("is-hovered", !entered);
+          applyAceternity3DTransforms(container, !entered);
+        });
+      });
+    }
+
+    function toggle3DFlashcardFlip(domId, event) {
+      if (event) event.stopPropagation();
+      const card = document.getElementById(domId);
+      if (!card) return;
+      const isFlipped = card.getAttribute("data-flipped") === "true";
+      card.setAttribute("data-flipped", isFlipped ? "false" : "true");
+      applyAceternity3DTransforms(card, card.getAttribute("data-entered") === "true");
+    }
+
+    function flipAll3DFlashcards() {
+      const allCards = document.querySelectorAll(".ac-card-container");
+      const anyUnflipped = Array.from(allCards).some((c) => c.getAttribute("data-flipped") !== "true");
+      allCards.forEach((c) => {
+        c.setAttribute("data-flipped", anyUnflipped ? "true" : "false");
+      });
+    }
+
+    function renderAll3DFlashcardDecks() {
+      const mounts = [
+        { id: "home-3d-flashcards-grid", prefix: "home" },
+        { id: "learn-3d-flashcards-grid", prefix: "learn" },
+        { id: "settings-3d-flashcards-grid", prefix: "settings" }
+      ];
+      mounts.forEach(({ id, prefix }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = FLASHCARD_DECK_DATA.map((card) => buildAceternityFlashcardHTML(card, prefix)).join("");
+      });
+      bindAceternity3DCards(document);
+    }
+
+    // =========================================================================
+    // ACETERNITY UI SQUIGGLY TEXT ENGINE (SVG Turbulence + Displacement Filters)
+    // Official spec: steps = 5, stepDuration = 80ms, scale = [6, 8],
+    // baseFrequency = 0.02, numOctaves = 3
+    // =========================================================================
+    const SQUIGGLY_CONFIG = {
+      steps: 5,
+      stepDuration: 80,
+      scale: [6, 8],
+      subtleScale: [2.2, 3.4],
+      baseFrequency: 0.02,
+      numOctaves: 3,
+      preset: "classic",
+      currentStep: 0,
+      timerId: null
+    };
+
+    function buildSquigglySvgFilters() {
+      const defs = document.getElementById("ac-squiggly-svg-defs");
+      if (!defs) return;
+      const { steps, scale, subtleScale, baseFrequency, numOctaves } = SQUIGGLY_CONFIG;
+      let markup = "";
+      for (let i = 0; i < steps; i++) {
+        const heroScale = Array.isArray(scale) ? scale[i % scale.length] : Number(scale) || 6;
+        const subScale = Array.isArray(subtleScale) ? subtleScale[i % subtleScale.length] : Number(subtleScale) || 2.5;
+        markup += `
+          <filter id="ac-squiggly-hero-${i}" x="-15%" y="-25%" width="130%" height="150%">
+            <feTurbulence type="fractalNoise" baseFrequency="${baseFrequency}" numOctaves="${numOctaves}" result="noise" seed="${i}" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="${heroScale}" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <filter id="ac-squiggly-subtle-${i}" x="-15%" y="-25%" width="130%" height="150%">
+            <feTurbulence type="fractalNoise" baseFrequency="${baseFrequency}" numOctaves="${numOctaves}" result="noise" seed="${i + 10}" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="${subScale}" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        `;
+      }
+      defs.innerHTML = markup;
+    }
+
+    function applySquigglyStepFrame() {
+      const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const nodes = document.querySelectorAll("#view-history .ac-squiggly-text");
+      if (reduced || SQUIGGLY_CONFIG.preset === "paused") {
+        nodes.forEach((el) => {
+          el.style.filter = "none";
+        });
+        return;
+      }
+      const step = SQUIGGLY_CONFIG.currentStep % SQUIGGLY_CONFIG.steps;
+      nodes.forEach((el) => {
+        const role = el.getAttribute("data-squiggly-role") || "hero";
+        const filterPrefix = role === "subtle" ? "ac-squiggly-subtle" : "ac-squiggly-hero";
+        el.style.filter = `url(#${filterPrefix}-${step})`;
+      });
+    }
+
+    function setSquigglyPreset(presetName) {
+      SQUIGGLY_CONFIG.preset = presetName;
+      if (presetName === "classic") {
+        SQUIGGLY_CONFIG.scale = [6, 8];
+        SQUIGGLY_CONFIG.subtleScale = [2.2, 3.4];
+        SQUIGGLY_CONFIG.stepDuration = 80;
+      } else if (presetName === "gentle") {
+        SQUIGGLY_CONFIG.scale = [3, 4];
+        SQUIGGLY_CONFIG.subtleScale = [1.4, 2.2];
+        SQUIGGLY_CONFIG.stepDuration = 110;
+      }
+      buildSquigglySvgFilters();
+      applySquigglyStepFrame();
+
+      const btnMap = {
+        classic: "squiggly-mode-classic",
+        gentle: "squiggly-mode-gentle",
+        paused: "squiggly-mode-pause"
+      };
+      Object.entries(btnMap).forEach(([key, id]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.className = key === presetName
+          ? "px-2.5 py-1 rounded-full font-bold bg-blue-500 text-white transition-colors"
+          : "px-2.5 py-1 rounded-full font-semibold text-slate-300 hover:text-white transition-colors";
+      });
+      startSquigglyAnimationLoop();
+    }
+
+    function startSquigglyAnimationLoop() {
+      if (SQUIGGLY_CONFIG.timerId) {
+        clearInterval(SQUIGGLY_CONFIG.timerId);
+        SQUIGGLY_CONFIG.timerId = null;
+      }
+      const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduced || SQUIGGLY_CONFIG.preset === "paused") {
+        applySquigglyStepFrame();
+        return;
+      }
+      SQUIGGLY_CONFIG.timerId = setInterval(() => {
+        const histView = document.getElementById("view-history");
+        if (!histView || histView.classList.contains("hidden") || document.hidden) return;
+        SQUIGGLY_CONFIG.currentStep = (SQUIGGLY_CONFIG.currentStep + 1) % SQUIGGLY_CONFIG.steps;
+        applySquigglyStepFrame();
+      }, SQUIGGLY_CONFIG.stepDuration);
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
       applyCategoryTheme("brand", "idle");
       loadPersistedState();
       loadSampleCustomGuideIntoEditor();
       refreshGuideUI();
+      buildSquigglySvgFilters();
+      renderAll3DFlashcardDecks();
       renderHomeRecentScans();
       renderHistoryView();
+      applySquigglyStepFrame();
+      startSquigglyAnimationLoop();
       renderAdminCorrectionsQueue();
       initImmersiveSystem();
     });
@@ -3861,7 +4604,6 @@
       const storyTrack = document.getElementById("scroll-story-section");
       if (storyTrack && !reducedMotion) {
         const onStoryScroll = () => {
-          if (window.innerWidth < 768) return;
           const rect = storyTrack.getBoundingClientRect();
           const scrollable = Math.max(1, rect.height - window.innerHeight);
           const rawProgress = -rect.top / scrollable;
@@ -4155,6 +4897,5 @@
     }
 
   </script>
-  <script src="/wastewise-bridge.js"></script>
 </body>
 </html>
