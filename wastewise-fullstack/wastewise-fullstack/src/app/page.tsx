@@ -23,7 +23,7 @@ interface ReferenceMessage {
   [key: string]: unknown;
 }
 
-const frameUrl = '/wastewise.html?v=pwa-lan-v5';
+const frameUrl = '/wastewise.html?v=direct-wifi-ip-10-24-23-215';
 
 /**
  * Robustly converts a Base64 data URL to a binary Blob in-memory.

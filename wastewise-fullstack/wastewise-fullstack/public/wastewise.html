@@ -1080,7 +1080,7 @@
         <div class="relative group p-3 rounded-2xl bg-white shadow-xl border-4 border-blue-500/20">
           <img
             id="pwa-qr-img"
-            src=""
+            src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=http%3A%2F%2F10.24.23.215%3A3000%2F"
             alt="Scan QR code to install WasteWise"
             class="w-48 h-48 rounded-lg block object-contain"
             loading="eager"
@@ -1093,7 +1093,7 @@
             id="pwa-url-input"
             type="text"
             readonly
-            value=""
+            value="http://10.24.23.215:3000/"
             aria-label="Direct mobile URL"
             class="flex-1 bg-transparent px-2 py-1 text-[11px] font-mono text-blue-300 focus:outline-none truncate cursor-pointer"
             onclick="this.select()"
@@ -5108,28 +5108,16 @@
     // Pre-fetch on page load
     fetchLanHostInfo();
 
-    async function getPwaInstallUrl() {
+    const WIFI_IP_URL = 'http://10.24.23.215:3000/';
+
+    function getPwaInstallUrl() {
       const currentHost = window.location.hostname;
-      // If already accessed via an IP address (e.g. 10.x.x.x or 192.168.x.x) or domain, use that!
+      // If already accessed directly from mobile via IP or domain, keep using that origin
       if (currentHost !== 'localhost' && currentHost !== '127.0.0.1' && currentHost !== '::1') {
-        try {
-          if (window.parent && window.parent !== window && window.parent.location.origin) {
-            return window.parent.location.origin + '/';
-          }
-        } catch (e) {}
         return window.location.origin + '/';
       }
-
-      // If user is viewing on localhost on their PC, mobile phones CANNOT use localhost.
-      // We must provide the real LAN IP!
-      if (!cachedLanUrl) {
-        await fetchLanHostInfo();
-      }
-      if (cachedLanUrl) {
-        return cachedLanUrl + '/';
-      }
-
-      return window.location.origin + '/';
+      // When opened on PC localhost, ALWAYS return the Wi-Fi IP for phone scanning
+      return WIFI_IP_URL;
     }
 
     function updateQrDisplay(url) {
