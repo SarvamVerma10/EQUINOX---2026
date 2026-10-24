@@ -23,7 +23,8 @@ interface ReferenceMessage {
   [key: string]: unknown;
 }
 
-const frameUrl = '/wastewise.html?v=direct-wifi-ip-10-24-23-215';
+const frameUrl = '/wastewise.html?v=laptop-qr-2026';
+const wifiUrl = 'http://10.24.23.215:3000/';
 
 /**
  * Robustly converts a Base64 data URL to a binary Blob in-memory.
@@ -53,6 +54,15 @@ export default function WasteWisePage() {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
+  const [showQrBadge, setShowQrBadge] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(wifiUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   const sendToReference = useCallback((type: string, details: Record<string, unknown> = {}) => {
     frameRef.current?.contentWindow?.postMessage(
@@ -249,6 +259,107 @@ export default function WasteWisePage() {
         onLoad={handleFrameLoad}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
       />
+
+      {/* Floating QR Code Badge for Laptop / Desktop Screen */}
+      {showQrBadge && (
+        <aside
+          aria-label="Scan QR to open on mobile"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            background: 'linear-gradient(135deg, rgba(15, 20, 32, 0.97) 0%, rgba(20, 28, 45, 0.97) 100%)',
+            border: '1px solid rgba(66, 133, 244, 0.45)',
+            boxShadow: '0 12px 45px rgba(0, 0, 0, 0.85), 0 0 30px rgba(66, 133, 244, 0.25)',
+            borderRadius: '24px',
+            padding: '10px 14px 10px 10px',
+            backdropFilter: 'blur(16px)',
+            color: '#ffffff',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              padding: '6px',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&data=${encodeURIComponent(wifiUrl)}`}
+              alt="Scan QR code with phone"
+              width={78}
+              height={78}
+              style={{ borderRadius: '10px', display: 'block' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '145px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', color: '#4285F4', letterSpacing: '0.06em' }}>
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#34A853', display: 'inline-block' }} />
+                Mobile Scanner
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowQrBadge(false)}
+                title="Dismiss"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 0,
+                  color: '#94A3B8',
+                  borderRadius: '50%',
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  lineHeight: 1
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#F3F4F8', lineHeight: 1.2 }}>
+              📱 Scan with Phone
+            </span>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#93C5FD' }}>
+                10.24.23.215:3000
+              </span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                style={{
+                  background: copied ? 'rgba(52, 168, 83, 0.25)' : 'rgba(66, 133, 244, 0.2)',
+                  border: '1px solid rgba(66, 133, 244, 0.3)',
+                  color: copied ? '#86EFAC' : '#93C5FD',
+                  borderRadius: '6px',
+                  padding: '2px 7px',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {copied ? '✓ Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
+
       <div
         aria-hidden="true"
         style={{

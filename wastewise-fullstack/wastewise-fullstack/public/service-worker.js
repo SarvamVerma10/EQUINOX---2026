@@ -1,13 +1,14 @@
 /**
- * WasteWise Service Worker (v2)
+ * WasteWise Service Worker (v5)
  * Strategy:
- *   - App shell (HTML, icons, bridge JS) → Cache-first
+ *   - Navigation requests & HTML documents → Network-first (always fresh when online, offline fallback)
+ *   - Static assets (images, icons, fonts) → Cache-first
  *   - Google Fonts / CDN assets → Stale-while-revalidate
- *   - NEVER intercept POST / PUT / non-GET requests
- *   - NEVER intercept /api/* routes (leave directly to native network)
+ *   - NEVER intercept non-GET requests (POST, PUT, etc.)
+ *   - NEVER intercept /api/* routes
  */
 
-const CACHE_NAME = 'wastewise-v3';
+const CACHE_NAME = 'wastewise-v5';
 const OFFLINE_URL = '/wastewise.html';
 
 /** Files to pre-cache on SW install */
@@ -55,14 +56,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
 
   // 1. NEVER intercept non-GET requests (e.g. POST /api/identify, /api/disposal, image uploads)
-  // Let browser handle non-GET natively without any Service Worker interference
   if (request.method !== 'GET') {
     return;
   }
 
   const url = new URL(request.url);
 
-  // 2. NEVER intercept API routes (/api/*) — dynamic backend data must go straight to server
+  // 2. NEVER intercept API routes (/api/*)
   if (url.pathname.startsWith('/api/')) {
     return;
   }
@@ -82,10 +82,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Navigation requests: serve app shell / offline fallback ──
-  if (request.mode === 'navigate') {
+  // ── Navigation requests & HTML files: network-first (always fetch latest, offline fallback) ──
+  if (request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/') {
     event.respondWith(
-      cacheFirst(request).catch(() => caches.match(OFFLINE_URL))
+      networkFirst(request, /* useCache */ true).catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
@@ -118,7 +118,7 @@ async function cacheFirst(request) {
   }
 }
 
-/** Network-first for static GET requests */
+/** Network-first for dynamic and navigation requests */
 async function networkFirst(request, useCache = true) {
   try {
     const response = await fetch(request);
@@ -151,7 +151,6 @@ async function staleWhileRevalidate(request) {
 
 function isStaticAsset(pathname) {
   return (
-    pathname.endsWith('.html') ||
     pathname.endsWith('.js') ||
     pathname.endsWith('.css') ||
     pathname.endsWith('.png') ||
