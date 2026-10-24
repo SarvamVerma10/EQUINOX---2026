@@ -2330,7 +2330,7 @@
                 <span data-i18n="uploadPhotoCta">Use a photo</span>
               </label>
               <input id="gallery-file-input" type="file" accept="image/*" class="hidden" onchange="handleFileInputChange(event)" />
-              <input id="mobile-capture-input" type="file" accept="image/*" class="hidden" onchange="handleFileInputChange(event)" />
+              <input id="mobile-capture-input" type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileInputChange(event)" />
             </div>
 
             <!-- Minimal Search Input + Clean Quick Pills -->
@@ -2397,7 +2397,7 @@
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
                       <span data-i18n="openLiveCameraBtn">Open camera</span>
                     </button>
-                    <button type="button" onclick="triggerMobileCaptureFallback()" class="px-4 py-2.5 rounded-full bg-white hover:bg-[#F1F3F4] text-[#202124] border border-[#DADCE0] font-medium text-xs flex items-center gap-1.5 shadow-sm">
+                    <button type="button" onclick="triggerGalleryUpload()" class="px-4 py-2.5 rounded-full bg-white hover:bg-[#F1F3F4] text-[#202124] border border-[#DADCE0] font-medium text-xs flex items-center gap-1.5 shadow-sm">
                       <span>📱</span>
                       <span data-i18n="nativeCaptureFallbackBtn">Upload media</span>
                     </button>
@@ -4594,10 +4594,20 @@
         return;
       }
 
+      const isMob = isMobileDevice();
+
+      // On mobile over remote Wi-Fi HTTP, getUserMedia is blocked by browser security (requires HTTPS or localhost).
+      // Immediately open native mobile camera directly so the user gets instant camera shutter without delays or gallery fallback.
+      if (isMob && (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)) {
+        showToast("Opening mobile camera...", "📷");
+        triggerMobileCameraCapture();
+        return;
+      }
+
       const videoEl = document.getElementById("camera-video-el");
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showToast("Live webcam not directly accessible. Opening photo picker...", "📷");
-        triggerMobileCaptureFallback();
+        showToast(isMob ? "Opening mobile camera..." : "Opening photo picker...", "📷");
+        triggerMobileCameraCapture();
         return;
       }
 
@@ -4608,9 +4618,8 @@
         }
 
         let stream = null;
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const constraintsList = [
-          { video: { facingMode: isMobile ? { ideal: currentFacingMode } : "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+          { video: { facingMode: isMob ? { ideal: currentFacingMode } : "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
           { video: { facingMode: currentFacingMode }, audio: false },
           { video: true, audio: false }
         ];
@@ -4647,8 +4656,13 @@
         }
       } catch (err) {
         console.warn("Live camera start failed:", err);
-        showCameraPermissionFallback("Camera Access Restricted", "Browser blocked live video or no webcam detected. Opening photo picker...");
-        triggerMobileCaptureFallback();
+        if (isMob) {
+          // On mobile, smoothly launch native device camera
+          triggerMobileCameraCapture();
+        } else {
+          showCameraPermissionFallback("Camera Access Restricted", "Browser blocked live video or no webcam detected. Opening photo picker...");
+          triggerMobileCameraCapture();
+        }
       }
     }
 
@@ -4689,12 +4703,38 @@
       document.getElementById("camera-permission-view").classList.remove("hidden");
     }
 
-    function triggerMobileCaptureFallback() {
+    function isMobileDevice() {
+      return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || 
+             (navigator.maxTouchPoints > 1 && !/Macintosh/i.test(navigator.userAgent));
+    }
+
+    function triggerMobileCameraCapture() {
+      const isMob = isMobileDevice();
       const inp = document.getElementById("mobile-capture-input") || document.getElementById("gallery-file-input");
       if (inp) {
+        if (isMob) {
+          // On mobile, capture="environment" ensures native CAMERA shutter opens instead of gallery
+          inp.setAttribute("capture", "environment");
+        } else {
+          // On desktop PC/laptop, capture="environment" can cause browser issues on Windows
+          inp.removeAttribute("capture");
+        }
         inp.value = "";
         inp.click();
       }
+    }
+
+    function triggerGalleryUpload() {
+      const inp = document.getElementById("gallery-file-input");
+      if (inp) {
+        inp.removeAttribute("capture");
+        inp.value = "";
+        inp.click();
+      }
+    }
+
+    function triggerMobileCaptureFallback() {
+      triggerMobileCameraCapture();
     }
 
     function resetCameraToIdle() {
