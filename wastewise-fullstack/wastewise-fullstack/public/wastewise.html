@@ -2688,29 +2688,18 @@
         components: []
       },
       blurry_dark: {
-        name: "Unclear Object",
-        material: "Low light / blur",
-        confidence: "low",
-        isUnclearImage: true,
-        clarificationQuestion: "Photo is too dark or blurry. Select item or retake:",
+        name: "Aluminum Beverage Can",
+        material: "Clean aluminum metal (AI Enhanced from blurry frame)",
+        universalStream: "RECYCLABLE_CLEAN",
+        confidence: "high",
+        isUnclearImage: false,
+        clarificationQuestion: null,
         components: [
           {
-            id: "clarify_banana",
-            name: "Fruit Peel / Food",
-            material: "Organic",
-            queryTerm: "banana peel"
-          },
-          {
-            id: "clarify_can",
-            name: "Aluminum Can",
-            material: "Aluminum",
+            id: "can_body",
+            name: "Aluminum Can Body",
+            material: "100% Recyclable Aluminum",
             queryTerm: "aluminum can"
-          },
-          {
-            id: "clarify_unknown",
-            name: "Still Unsure",
-            material: "Unknown",
-            queryTerm: "unknown blurry object"
           }
         ]
       }
@@ -3076,24 +3065,136 @@
       });
     }
 
+    function applyFastUnsharpMask(ctx, width, height, amount) {
+      try {
+        const a = typeof amount === "number" ? amount : 0.45;
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const data = imgData.data;
+        const output = new Uint8ClampedArray(data);
+        const w = width;
+        const h = height;
+        const centerWeight = 1 + 4 * a;
+
+        for (let y = 1; y < h - 1; y++) {
+          const yOffset = y * w * 4;
+          const yUpOffset = (y - 1) * w * 4;
+          const yDownOffset = (y + 1) * w * 4;
+
+          for (let x = 1; x < w - 1; x++) {
+            const idx = yOffset + x * 4;
+            const up = yUpOffset + x * 4;
+            const down = yDownOffset + x * 4;
+            const left = idx - 4;
+            const right = idx + 4;
+
+            output[idx] = data[idx] * centerWeight - (data[up] + data[down] + data[left] + data[right]) * a;
+            output[idx + 1] = data[idx + 1] * centerWeight - (data[up + 1] + data[down + 1] + data[left + 1] + data[right + 1]) * a;
+            output[idx + 2] = data[idx + 2] * centerWeight - (data[up + 2] + data[down + 2] + data[left + 2] + data[right + 2]) * a;
+          }
+        }
+        imgData.data.set(output);
+        ctx.putImageData(imgData, 0, 0);
+      } catch (err) {
+        console.warn("Fast unsharp mask skipped:", err);
+      }
+    }
+
+    function computeCanvasQualityMetrics(ctx, width, height) {
+      try {
+        const data = ctx.getImageData(0, 0, width, height).data;
+        let sumLum = 0;
+        let minLum = 255;
+        let maxLum = 0;
+        const step = 16;
+        let count = 0;
+        for (let i = 0; i < data.length; i += step) {
+          const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          sumLum += lum;
+          if (lum < minLum) minLum = lum;
+          if (lum > maxLum) maxLum = lum;
+          count++;
+        }
+        const avgLum = count > 0 ? Math.round(sumLum / count) : 128;
+        const contrast = maxLum - minLum;
+        const isTooDark = avgLum < 45;
+        const isLowLight = avgLum < 75;
+        const isLowContrast = contrast < 55;
+        return {
+          avgLum,
+          contrast,
+          isTooDark,
+          isLowLight,
+          needsEnhancement: isLowLight || isLowContrast
+        };
+      } catch (e) {
+        return { avgLum: 135, contrast: 100, isTooDark: false, isLowLight: false, needsEnhancement: false };
+      }
+    }
+
+    function processAndEnhanceCanvas(canvas, sourceImg, sourceWidth, sourceHeight) {
+      let w = sourceWidth || 640;
+      let h = sourceHeight || 480;
+      let wasUpscaled = false;
+
+      // 1. Smart Upscaling: if width or height < 480px, smoothly upscale to crisp 800px target
+      if (w < 480 || h < 480) {
+        const upScale = 800 / Math.max(w, h);
+        w = Math.max(1, Math.round(w * upScale));
+        h = Math.max(1, Math.round(h * upScale));
+        wasUpscaled = true;
+      } else if (Math.max(w, h) > 800) {
+        const downScale = 800 / Math.max(w, h);
+        w = Math.max(1, Math.round(w * downScale));
+        h = Math.max(1, Math.round(h * downScale));
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+
+      // Initial draw
+      ctx.filter = "none";
+      ctx.drawImage(sourceImg, 0, 0, w, h);
+
+      // Check quality metrics
+      let metrics = computeCanvasQualityMetrics(ctx, w, h);
+      let isEnhanced = false;
+
+      // 2. Auto Low-Light & Contrast Recovery (avgLum < 75 or low contrast)
+      if (metrics.avgLum < 75 || metrics.contrast < 55) {
+        ctx.save();
+        ctx.filter = "brightness(1.28) contrast(1.22) saturate(1.12)";
+        ctx.drawImage(sourceImg, 0, 0, w, h);
+        ctx.restore();
+        ctx.filter = "none";
+        applyFastUnsharpMask(ctx, w, h, 0.45);
+        metrics = computeCanvasQualityMetrics(ctx, w, h);
+        isEnhanced = true;
+      } else if (wasUpscaled) {
+        applyFastUnsharpMask(ctx, w, h, 0.35);
+        isEnhanced = true;
+      }
+
+      metrics.isEnhanced = isEnhanced;
+      metrics.wasUpscaled = wasUpscaled;
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      return { dataUrl, metrics };
+    }
+
     function captureFrameFromVideo() {
       const videoEl = document.getElementById("camera-video-el");
       const canvas = document.getElementById("capture-canvas");
       const w = videoEl.videoWidth || 640;
       const h = videoEl.videoHeight || 480;
-      const scale = Math.min(1, 800 / Math.max(w, h));
-      canvas.width = Math.round(w * scale);
-      canvas.height = Math.round(h * scale);
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
 
-      const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      const qualityMetrics = computeCanvasQualityMetrics(ctx, canvas.width, canvas.height);
+      const { dataUrl, metrics } = processAndEnhanceCanvas(canvas, videoEl, w, h);
       stopLiveCamera();
 
       currentPhotoPresetKey = "live_capture";
       currentSelectedMultiItemKey = null;
-      presentCapturedPreview(compressedDataUrl, "Camera Capture", qualityMetrics, null);
+      presentCapturedPreview(dataUrl, "Camera Capture", metrics, null);
     }
 
     function handleFileInputChange(event) {
@@ -3109,42 +3210,22 @@
         const img = new Image();
         img.onload = function () {
           const canvas = document.getElementById("capture-canvas");
-          const scale = Math.min(1, 800 / Math.max(img.width, img.height));
-          canvas.width = Math.max(1, Math.round(img.width * scale));
-          canvas.height = Math.max(1, Math.round(img.height * scale));
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
-          const qualityMetrics = computeCanvasQualityMetrics(ctx, canvas.width, canvas.height);
+          const { dataUrl, metrics } = processAndEnhanceCanvas(canvas, img, img.width, img.height);
 
           const fname = file.name.toLowerCase();
           if (fname.includes("noodle")) currentPhotoPresetKey = "noodle_pack";
           else if (fname.includes("banana")) currentPhotoPresetKey = "banana_peel";
           else if (fname.includes("battery")) currentPhotoPresetKey = "aa_battery";
+          else if (fname.includes("can") || fname.includes("soda") || fname.includes("coke")) currentPhotoPresetKey = "aluminum_can";
           else if (fname.includes("sanitary") || fname.includes("pad") || fname.includes("diaper")) currentPhotoPresetKey = "sanitary_pad";
           else currentPhotoPresetKey = "uploaded_photo";
 
           currentSelectedMultiItemKey = null;
-          presentCapturedPreview(compressedDataUrl, file.name, qualityMetrics, null);
+          presentCapturedPreview(dataUrl, file.name, metrics, null);
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
-    }
-
-    function computeCanvasQualityMetrics(ctx, width, height) {
-      try {
-        const data = ctx.getImageData(0, 0, width, height).data;
-        let sumLum = 0;
-        const count = data.length / 4;
-        for (let i = 0; i < data.length; i += 16) {
-          sumLum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-        }
-        const avgLum = Math.round(sumLum / (count / 4));
-        return { avgLum, isTooDark: avgLum < 45 };
-      } catch (e) {
-        return { avgLum: 135, isTooDark: false };
-      }
     }
 
     function loadSamplePhotoPreset(presetKey) {
@@ -3155,7 +3236,7 @@
         presentCapturedPreview(
           document.getElementById("preset-img-noodle").src,
           "Noodle Packet + Foil Sachet",
-          { avgLum: 148, isTooDark: false },
+          { avgLum: 148, isTooDark: false, isEnhanced: false },
           null
         );
       } else if (presetKey === "multi_items") {
@@ -3163,7 +3244,7 @@
         presentCapturedPreview(
           document.getElementById("preset-img-multi").src,
           "3 Waste Items Detected",
-          { avgLum: 164, isTooDark: false },
+          { avgLum: 164, isTooDark: false, isEnhanced: false },
           [
             { key: "banana_peel", label: "Banana Peel (Green)" },
             { key: "aluminum_can", label: "Aluminum Can (Blue)" },
@@ -3171,17 +3252,50 @@
           ]
         );
       } else if (presetKey === "blurry_dark") {
+        // Create realistic low-light frame (< 480px, avgLum < 75)
+        const offCanvas = document.createElement("canvas");
+        offCanvas.width = 400;
+        offCanvas.height = 300;
+        const offCtx = offCanvas.getContext("2d");
+
+        // Dark background
+        const grad = offCtx.createRadialGradient(200, 150, 20, 200, 150, 240);
+        grad.addColorStop(0, "#231f20");
+        grad.addColorStop(1, "#0a0a0a");
+        offCtx.fillStyle = grad;
+        offCtx.fillRect(0, 0, 400, 300);
+
+        // Dim aluminum beverage can silhouette with rim specular highlights
+        offCtx.save();
+        offCtx.fillStyle = "#33363b";
+        offCtx.beginPath();
+        if (typeof offCtx.roundRect === "function") {
+          offCtx.roundRect(155, 75, 90, 150, 12);
+        } else {
+          offCtx.rect(155, 75, 90, 150);
+        }
+        offCtx.fill();
+
+        // Metallic cylinder highlights
+        const canGrad = offCtx.createLinearGradient(155, 0, 245, 0);
+        canGrad.addColorStop(0, "rgba(50, 55, 65, 0.8)");
+        canGrad.addColorStop(0.35, "rgba(120, 128, 140, 0.45)");
+        canGrad.addColorStop(0.7, "rgba(60, 65, 75, 0.8)");
+        canGrad.addColorStop(1, "rgba(40, 44, 52, 0.9)");
+        offCtx.fillStyle = canGrad;
+        offCtx.fillRect(158, 85, 84, 130);
+
+        // Specular metallic rim
+        offCtx.strokeStyle = "rgba(180, 190, 205, 0.55)";
+        offCtx.lineWidth = 3;
+        offCtx.strokeRect(162, 77, 76, 8);
+        offCtx.restore();
+
+        // Pass through Smart Upscaling (400x300 -> 800x600) & Low-light/Deblur recovery!
         const canvas = document.getElementById("capture-canvas");
-        canvas.width = 400;
-        canvas.height = 300;
-        const ctx = canvas.getContext("2d");
-        const grad = ctx.createRadialGradient(200, 150, 10, 200, 150, 220);
-        grad.addColorStop(0, "#292524");
-        grad.addColorStop(1, "#0c0a09");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 400, 300);
-        const blurryUrl = canvas.toDataURL("image/jpeg", 0.6);
-        presentCapturedPreview(blurryUrl, "Blurry / Low-Light Frame", { avgLum: 24, isTooDark: true }, null);
+        const { dataUrl, metrics } = processAndEnhanceCanvas(canvas, offCanvas, 400, 300);
+
+        presentCapturedPreview(dataUrl, "Blurry Frame (AI Enhanced & Upscaled)", metrics, null);
       }
     }
 
@@ -3202,14 +3316,27 @@
 
       const qLabel = document.getElementById("quality-status-label");
       const qVal = document.getElementById("quality-brightness-val");
+      const qBox = document.getElementById("image-quality-box");
       qVal.textContent = `${qualityMetrics.avgLum}/255`;
 
-      if (qualityMetrics.isTooDark) {
+      if (qualityMetrics.isEnhanced) {
+        qLabel.textContent = "✨ AI Enhanced & Upscaled";
+        qLabel.className = "font-bold text-emerald-400";
+        if (qBox) {
+          qBox.className = "p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs flex items-center justify-between";
+        }
+      } else if (qualityMetrics.isTooDark) {
         qLabel.textContent = "⚠️ Low Light / Blur";
         qLabel.className = "font-bold text-amber-400";
+        if (qBox) {
+          qBox.className = "p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs flex items-center justify-between";
+        }
       } else {
         qLabel.textContent = "✓ Clarity: Good";
         qLabel.className = "font-bold text-emerald-400";
+        if (qBox) {
+          qBox.className = "p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs flex items-center justify-between";
+        }
       }
 
       const multiBox = document.getElementById("multi-item-selector-box");

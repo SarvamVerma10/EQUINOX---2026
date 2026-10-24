@@ -501,6 +501,8 @@ export async function analyzeWasteImageWithGemini(
 Use exactly one stream when the evidence is sufficient: RECYCLABLE_CLEAN (accepted clean paper/cardboard, metal, container glass, rigid plastics); COMPOST_ORGANIC (food scraps, yard trimmings); HAZARDOUS_EWASTE (batteries, electronics, chemicals, oils, paints, lamps); MEDICAL_SANITARY (medicines, sharps, clinical/sanitary waste); TEXTILE_DONATION (clothing/fabrics); CONSTRUCTION_INERT (ceramics, masonry, inert building debris, window/mirror glass); SOFT_PLASTIC_SPECIAL (flexible films, bags, wrappers); RESIDUAL_LANDFILL (known contaminated or non-recoverable residuals). If the item, composition, or condition cannot be reliably distinguished, set universalStream to "UNRESOLVED", confidence to "low", needsClarification to true, and ask one concise question instead of guessing.
 
 Report observable materials only; do not infer exact resin codes or chemical contents without visible evidence. Treat mixed products as separate components. Never classify batteries, electronics, chemicals, or sharps as ordinary recycling/landfill; never classify food scraps as recycling. Give concise, safe handling steps, but do not claim a local bin or collection route is verified. The local guide is checked separately.
+
+LOW-QUALITY / BLURRY IMAGE RECOVERY: If the image is blurry, motion-blurred, dark, pixelated, or partially occluded, mentally reconstruct the object using shape silhouette, specular highlights (metallic vs. matte plastic vs. organic texture), color gradients, and partial packaging typography to accurately identify the specific itemName and universalStream instead of returning an unknown/generic label.
 ${textOrRegionHint ? `User-provided item context: "${textOrRegionHint}"` : ""}`;
 
   try {

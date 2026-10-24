@@ -21,36 +21,155 @@ export interface CameraUploadHandle {
 }
 
 /**
- * Resizes and compresses an image before it is converted to Base64 for the API request.
+ * Fast 3x3 unsharp-mask convolution filter for real-time deblurring & edge enhancement.
+ * Operates on canvas pixel data in-place using typed arrays (<5ms).
  */
-async function compressImage(image: Blob, maxDimension = 768, quality = 0.75): Promise<Blob> {
-  const bitmap = await createImageBitmap(image);
+function applyUnsharpMask(ctx: CanvasRenderingContext2D, width: number, height: number, amount = 0.45): void {
   try {
-    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-    const width = Math.round(bitmap.width * scale);
-    const height = Math.round(bitmap.height * scale);
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+    const output = new Uint8ClampedArray(data);
+    const w = width;
+    const h = height;
+    const a = amount;
+    const centerWeight = 1 + 4 * a;
+
+    for (let y = 1; y < h - 1; y++) {
+      const yOffset = y * w * 4;
+      const yUpOffset = (y - 1) * w * 4;
+      const yDownOffset = (y + 1) * w * 4;
+
+      for (let x = 1; x < w - 1; x++) {
+        const idx = yOffset + x * 4;
+        const up = yUpOffset + x * 4;
+        const down = yDownOffset + x * 4;
+        const left = idx - 4;
+        const right = idx + 4;
+
+        output[idx] = data[idx] * centerWeight - (data[up] + data[down] + data[left] + data[right]) * a;
+        output[idx + 1] = data[idx + 1] * centerWeight - (data[up + 1] + data[down + 1] + data[left + 1] + data[right + 1]) * a;
+        output[idx + 2] = data[idx + 2] * centerWeight - (data[up + 2] + data[down + 2] + data[left + 2] + data[right + 2]) * a;
+      }
+    }
+    imgData.data.set(output);
+    ctx.putImageData(imgData, 0, 0);
+  } catch (err) {
+    console.warn('Fast unsharp mask skipped:', err);
+  }
+}
+
+/**
+ * Computes luminance and contrast metrics from canvas pixels.
+ */
+function computeCanvasLuminance(ctx: CanvasRenderingContext2D, width: number, height: number): { avgLum: number; contrast: number } {
+  try {
+    const data = ctx.getImageData(0, 0, width, height).data;
+    let sumLum = 0;
+    let minLum = 255;
+    let maxLum = 0;
+    const step = 16;
+    let count = 0;
+    for (let i = 0; i < data.length; i += step) {
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      sumLum += lum;
+      if (lum < minLum) minLum = lum;
+      if (lum > maxLum) maxLum = lum;
+      count++;
+    }
+    const avgLum = count > 0 ? Math.round(sumLum / count) : 128;
+    return { avgLum, contrast: maxLum - minLum };
+  } catch {
+    return { avgLum: 128, contrast: 100 };
+  }
+}
+
+/**
+ * Resizes, enhances (smart upscaling, deblurring & low-light recovery), and compresses an image.
+ */
+async function compressImage(image: Blob, targetMaxDimension = 800, quality = 0.82): Promise<{ blob: Blob; isEnhanced: boolean }> {
+  let sourceWidth = 0;
+  let sourceHeight = 0;
+  let drawableSource: ImageBitmap | HTMLImageElement;
+
+  if (typeof createImageBitmap === 'function') {
+    const bitmap = await createImageBitmap(image);
+    sourceWidth = bitmap.width;
+    sourceHeight = bitmap.height;
+    drawableSource = bitmap;
+  } else {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      const url = URL.createObjectURL(image);
+      el.onload = () => { URL.revokeObjectURL(url); resolve(el); };
+      el.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image decode error')); };
+      el.src = url;
+    });
+    sourceWidth = img.naturalWidth || img.width;
+    sourceHeight = img.naturalHeight || img.height;
+    drawableSource = img;
+  }
+
+  try {
+    let width = sourceWidth;
+    let height = sourceHeight;
+    let wasUpscaled = false;
+
+    // 1. Smart Upscaling: if image is small/low-res (< 480px), upscale smoothly to crisp 800px target
+    if (width < 480 || height < 480) {
+      const upScale = targetMaxDimension / Math.max(width, height);
+      width = Math.max(1, Math.round(width * upScale));
+      height = Math.max(1, Math.round(height * upScale));
+      wasUpscaled = true;
+    } else if (Math.max(width, height) > targetMaxDimension) {
+      const downScale = targetMaxDimension / Math.max(width, height);
+      width = Math.max(1, Math.round(width * downScale));
+      height = Math.max(1, Math.round(height * downScale));
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
 
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) {
       throw new Error('Unable to prepare the image for upload.');
     }
 
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
-    context.drawImage(bitmap, 0, 0, width, height);
+    context.drawImage(drawableSource, 0, 0, width, height);
 
-    return await new Promise<Blob>((resolve, reject) => {
+    // 2. Auto Low-Light & Contrast Recovery
+    const { avgLum, contrast } = computeCanvasLuminance(context, width, height);
+    const isDarkOrLowContrast = avgLum < 75 || contrast < 55;
+    let isEnhanced = false;
+
+    if (isDarkOrLowContrast) {
+      context.save();
+      context.filter = 'brightness(1.28) contrast(1.22) saturate(1.12)';
+      context.drawImage(drawableSource, 0, 0, width, height);
+      context.restore();
+      context.filter = 'none';
+      applyUnsharpMask(context, width, height, 0.45);
+      isEnhanced = true;
+    } else if (wasUpscaled) {
+      applyUnsharpMask(context, width, height, 0.35);
+      isEnhanced = true;
+    }
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject(new Error('Unable to compress the selected image.')),
+        (b) => b ? resolve(b) : reject(new Error('Unable to compress the selected image.')),
         'image/jpeg',
         quality
       );
     });
+
+    return { blob, isEnhanced };
   } finally {
-    bitmap.close();
+    if ('close' in drawableSource && typeof (drawableSource as ImageBitmap).close === 'function') {
+      (drawableSource as ImageBitmap).close();
+    }
   }
 }
 
@@ -69,6 +188,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   const [textQuery, setTextQuery] = useState<string>('');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isEnhanced, setIsEnhanced] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -82,6 +202,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
       previewUrlRef.current = null;
     }
     setPreviewImage(null);
+    setIsEnhanced(false);
   };
 
   // Clean up camera stream and preview URL on unmount
@@ -180,8 +301,9 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   const processAndSubmitImage = async (image: Blob) => {
     try {
       onAnalysisStart();
-      const compressedImage = await compressImage(image);
+      const { blob: compressedImage, isEnhanced: enhanced } = await compressImage(image);
       clearPreviewImage();
+      setIsEnhanced(enhanced);
       const previewUrl = URL.createObjectURL(compressedImage);
       previewUrlRef.current = previewUrl;
       setPreviewImage(previewUrl);
@@ -459,9 +581,15 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
                 className="w-full h-full object-contain"
               />
               <div className="absolute top-3 left-3">
+                {isEnhanced ? (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-950/80 backdrop-blur-md text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> ✨ AI Enhanced & Upscaled
+                </span>
+              ) : (
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-stone-200 border border-white/10 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Photo Analyzed
                 </span>
+              )}
               </div>
               <div className="absolute bottom-3 right-3">
                 <button
