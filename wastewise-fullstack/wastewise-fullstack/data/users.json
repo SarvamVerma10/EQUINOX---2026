@@ -1,0 +1,23 @@
+[
+  {
+    "id": "user-sarvam-demo",
+    "name": "Sarvam Verma",
+    "email": "demo@wastewise.org",
+    "passwordHash": "ee4268efb02d20f59440e19ecfeae3e8e2d3da46c46de4759ff097a1bfd68e1a",
+    "createdAt": "2026-10-24T00:00:00.000Z"
+  },
+  {
+    "id": "user-judge-test",
+    "name": "Green Ward Judge",
+    "email": "judge@equinox2026.org",
+    "passwordHash": "ab4fbe3be24382fa3d7b957756fca8a3e73347d744ab2e31eb503883a259e259",
+    "createdAt": "2026-10-24T00:00:00.000Z"
+  },
+  {
+    "id": "usr_ff304b88",
+    "name": "Sarvam Verma",
+    "email": "sarvam.verma@example.com",
+    "passwordHash": "2fe399dd965ccb78ab039a8e652262b3f421a02d8704781f322d16539fad396c",
+    "createdAt": "2026-10-24T02:18:48.309Z"
+  }
+]

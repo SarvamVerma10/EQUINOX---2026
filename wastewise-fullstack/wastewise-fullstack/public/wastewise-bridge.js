@@ -244,6 +244,19 @@
     }
   });
 
+  // Pluggable Authentication configuration hook
+  if (typeof window !== 'undefined' && !window.WASTEWISE_AUTH_CONFIG) {
+    window.WASTEWISE_AUTH_CONFIG = {
+      apiBaseUrl: '/api/auth',
+      loginPath: '',
+      signupPath: '',
+      forgotPath: '',
+      loginUrl: '/api/auth',
+      signupUrl: '/api/auth',
+      endpoint: '/api/auth'
+    };
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     sendToApp('reference-ready', {});
   });
