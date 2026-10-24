@@ -1183,7 +1183,7 @@
                 <span data-i18n="uploadPhotoCta">Use a photo</span>
               </label>
               <input id="gallery-file-input" type="file" accept="image/*" class="hidden" onchange="handleFileInputChange(event)" />
-              <input id="mobile-capture-input" type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileInputChange(event)" />
+              <input id="mobile-capture-input" type="file" accept="image/*" class="hidden" onchange="handleFileInputChange(event)" />
 
               <!-- Prominent PWA Install / QR Button -->
               <button
@@ -1258,11 +1258,11 @@
                   </div>
 
                   <div class="flex flex-wrap items-center justify-center gap-2.5">
-                    <button type="button" onclick="startLiveCamera()" class="px-5 py-2.5 rounded-full theme-dynamic-btn font-bold text-xs sm:text-sm flex items-center gap-2">
+                    <button type="button" onclick="startLiveCamera()" class="px-5 py-2.5 rounded-full theme-dynamic-btn font-bold text-xs sm:text-sm flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95 transition-all">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
                       <span data-i18n="openLiveCameraBtn">Open camera</span>
                     </button>
-                    <button type="button" onclick="triggerMobileCaptureFallback()" class="px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-medium text-xs flex items-center gap-1.5">
+                    <button type="button" onclick="triggerMobileCaptureFallback()" class="px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/15 text-slate-200 hover:text-white border border-white/20 font-medium text-xs flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 transition-all">
                       <span>📱</span>
                       <span data-i18n="nativeCaptureFallbackBtn">Phone camera</span>
                     </button>
@@ -2996,31 +2996,61 @@
         return;
       }
 
-      hideAllCameraViews();
       const videoEl = document.getElementById("camera-video-el");
-
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showCameraPermissionFallback("Camera API Unavailable", "Use the file input or sample photos below.");
+        showToast("Live webcam not directly accessible. Opening photo picker...", "📷");
+        triggerMobileCaptureFallback();
         return;
       }
 
       try {
-        if (mediaStream) mediaStream.getTracks().forEach((t) => t.stop());
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: currentFacingMode }, width: { ideal: 1280 }, height: { ideal: 960 } },
-          audio: false
-        });
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((t) => t.stop());
+          mediaStream = null;
+        }
+
+        let stream = null;
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const constraintsList = [
+          { video: { facingMode: isMobile ? { ideal: currentFacingMode } : "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+          { video: { facingMode: currentFacingMode }, audio: false },
+          { video: true, audio: false }
+        ];
+
+        for (const constraints of constraintsList) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            if (stream) break;
+          } catch (e) {
+            console.warn("Camera constraint attempt failed:", e);
+          }
+        }
+
+        if (!stream) {
+          throw new Error("Unable to access camera feed.");
+        }
+
+        mediaStream = stream;
         videoEl.srcObject = mediaStream;
+        await videoEl.play().catch(() => {});
+
+        hideAllCameraViews();
         document.getElementById("camera-live-view").classList.remove("hidden");
-        document.getElementById("camera-facing-badge").textContent =
-          currentFacingMode === "environment" ? "Rear Camera" : "Front Camera";
+        const facingBadge = document.getElementById("camera-facing-badge");
+        if (facingBadge) {
+          facingBadge.textContent = currentFacingMode === "environment" ? "Rear Camera" : "Front Camera";
+        }
 
         const track = mediaStream.getVideoTracks()[0];
         const caps = track && track.getCapabilities ? track.getCapabilities() : {};
         const torchBtn = document.getElementById("torch-btn-label");
-        torchBtn.textContent = caps && caps.torch ? (torchEnabled ? "Flashlight: ON" : "Flashlight: OFF") : "Flashlight (Unsupported)";
+        if (torchBtn) {
+          torchBtn.textContent = caps && caps.torch ? (torchEnabled ? "Flashlight: ON" : "Flashlight: OFF") : "Flashlight (Unsupported)";
+        }
       } catch (err) {
-        showCameraPermissionFallback("Camera Permission Denied", "Allow camera access or choose a photo below.");
+        console.warn("Live camera start failed:", err);
+        showCameraPermissionFallback("Camera Access Restricted", "Browser blocked live video or no webcam detected. Opening photo picker...");
+        triggerMobileCaptureFallback();
       }
     }
 
@@ -3062,8 +3092,13 @@
     }
 
     function triggerMobileCaptureFallback() {
-      const inp = document.getElementById("mobile-capture-input");
-      if (inp) inp.click();
+      const inp = document.getElementById("mobile-capture-input") || document.getElementById("gallery-file-input");
+      if (inp) {
+        inp.value = "";
+        inp.click();
+      } else {
+        console.warn("No file input found for capture fallback.");
+      }
     }
 
     function resetCameraToIdle() {

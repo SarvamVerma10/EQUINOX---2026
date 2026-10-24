@@ -23,7 +23,7 @@ interface ReferenceMessage {
   [key: string]: unknown;
 }
 
-const frameUrl = '/wastewise.html?v=deblur-superres-2026';
+const frameUrl = '/wastewise.html?v=camera-fix-2026';
 const wifiUrl = 'http://10.24.23.215:3000/';
 
 /**
@@ -257,6 +257,7 @@ export default function WasteWisePage() {
         src={frameUrl}
         title="WasteWise"
         onLoad={handleFrameLoad}
+        allow="camera *; microphone *; autoplay *; display-capture *"
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
       />
 
