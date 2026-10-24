@@ -19,5 +19,12 @@
     "email": "sarvam.verma@example.com",
     "passwordHash": "2fe399dd965ccb78ab039a8e652262b3f421a02d8704781f322d16539fad396c",
     "createdAt": "2026-10-24T02:18:48.309Z"
+  },
+  {
+    "id": "usr_390165c0",
+    "name": "Sarvam Verma",
+    "email": "sarvam.test@email.com",
+    "passwordHash": "d44399de398c7b54f78cc2d338c4bbf8aa3516686a70a014c68b7ea9c2676204",
+    "createdAt": "2026-10-24T02:37:43.863Z"
   }
 ]
