@@ -1004,9 +1004,127 @@
         <button type="button" id="lang-toggle-btn" onclick="toggleLanguage()" aria-label="Switch Language English or Hindi" class="px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-semibold text-white transition-colors focus-ring">
           🌐 <span id="lang-toggle-label">हिन्दी</span>
         </button>
+
+        <!-- PWA / QR Code Toggle Button -->
+        <button
+          type="button"
+          id="pwa-qr-btn"
+          onclick="openPwaModal()"
+          aria-label="Install App / Get QR Code"
+          title="Install WasteWise PWA / Scan QR Code"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 hover:border-blue-400 text-xs font-semibold text-blue-300 hover:text-white transition-all focus-ring shadow-sm cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+            <line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+          <span class="hidden sm:inline">📱 Install PWA</span>
+          <span class="sm:hidden">📱 App</span>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PWA INSTALL MODAL (Hidden by default, QR Code + Clear Instructions)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div
+    id="pwa-install-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pwa-modal-title"
+    class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-all duration-300"
+    onclick="handlePwaBackdropClick(event)"
+  >
+    <!-- Frosted backdrop with blur -->
+    <div class="absolute inset-0 bg-slate-950/75 backdrop-blur-md transition-opacity"></div>
+
+    <!-- Modal Card -->
+    <div
+      id="pwa-modal-card"
+      class="relative w-full max-w-[360px] rounded-3xl border border-white/15 p-6 shadow-2xl overflow-hidden transform transition-all text-center"
+      style="background: linear-gradient(145deg, rgba(15, 20, 32, 0.96) 0%, rgba(20, 28, 45, 0.96) 100%); box-shadow: 0 0 60px rgba(66, 133, 244, 0.22), 0 24px 60px rgba(0, 0, 0, 0.85);"
+      onclick="event.stopPropagation()"
+    >
+      <!-- Top Neon Glow Line -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
+
+      <!-- Close Button -->
+      <button
+        type="button"
+        onclick="closePwaModal()"
+        aria-label="Close modal"
+        class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- App Header & Icon -->
+      <div class="flex flex-col items-center gap-2 pt-1 pb-3">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg border border-white/20" style="background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.97 0-9 4.03-9 9 0 4.17 2.84 7.67 6.69 8.69L12 21l2.31-.31C18.16 19.67 21 16.17 21 12c0-4.97-4.03-9-9-9zm-1 14v-4H8l4-6v4h3l-4 6z"/>
+          </svg>
+        </div>
+        <h2 id="pwa-modal-title" class="font-display text-lg font-bold text-white tracking-tight">
+          Install WasteWise PWA
+        </h2>
+        <p class="text-xs text-slate-400 max-w-[260px] leading-relaxed">
+          Fast camera access · Zero installation friction · Works offline
+        </p>
+      </div>
+
+      <!-- QR Code Container -->
+      <div class="my-3 flex flex-col items-center">
+        <div class="relative group p-3 rounded-2xl bg-white shadow-xl border-4 border-blue-500/20">
+          <img
+            id="pwa-qr-img"
+            src=""
+            alt="Scan QR code to install WasteWise"
+            class="w-48 h-48 rounded-lg block object-contain"
+            loading="eager"
+          />
+        </div>
+        <!-- Link Display / Copy Chip -->
+        <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-mono text-blue-300 max-w-full truncate">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="pwa-qr-url-text" class="truncate"></span>
+        </div>
+      </div>
+
+      <!-- PWA Friendly Instructions -->
+      <div class="mt-4 p-3 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2">
+        <p class="text-xs text-slate-300 leading-relaxed font-medium">
+          📸 <span class="text-white font-semibold">Scan with your phone camera</span> to instantly open and install WasteWise as an app.
+        </p>
+        <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-400 pt-1 border-t border-white/10">
+          <div class="flex items-center gap-1.5">
+            <span>🤖</span>
+            <span><strong>Android:</strong> Chrome → <em>Add to Home</em></span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span>🍎</span>
+            <span><strong>iOS:</strong> Safari → <em>Share → Add</em></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Native Install Button (if browser supports beforeinstallprompt) -->
+      <div id="pwa-native-install-row" class="hidden mt-3">
+        <button
+          type="button"
+          id="pwa-direct-install-btn"
+          onclick="triggerNativePwaInstall()"
+          class="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-blue-500 hover:bg-blue-600 text-white transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Direct Install on This Device
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-16 relative z-10">
@@ -4919,6 +5037,76 @@
             console.warn('[WasteWise] Service Worker registration failed:', err);
           });
       });
+    }
+  </script>
+
+  <!-- PWA & QR Code Modal Logic -->
+  <script>
+    let deferredPwaPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const installRow = document.getElementById('pwa-native-install-row');
+      if (installRow) installRow.classList.remove('hidden');
+    });
+
+    function getPwaInstallUrl() {
+      try {
+        if (window.parent && window.parent !== window && window.parent.location.origin) {
+          return window.parent.location.origin + '/';
+        }
+      } catch (e) {}
+      return window.location.origin + '/';
+    }
+
+    function openPwaModal() {
+      const modal = document.getElementById('pwa-install-modal');
+      const qrImg = document.getElementById('pwa-qr-img');
+      const urlText = document.getElementById('pwa-qr-url-text');
+      if (!modal || !qrImg) return;
+
+      const targetUrl = getPwaInstallUrl();
+      if (urlText) urlText.textContent = targetUrl;
+
+      // Scannable QR code generated using qrserver API
+      const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=' + encodeURIComponent(targetUrl);
+      qrImg.src = qrApiUrl;
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+
+      window.addEventListener('keydown', handlePwaKeydown);
+    }
+
+    function closePwaModal() {
+      const modal = document.getElementById('pwa-install-modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handlePwaKeydown);
+    }
+
+    function handlePwaBackdropClick(event) {
+      if (event.target && event.target.id === 'pwa-install-modal') {
+        closePwaModal();
+      }
+    }
+
+    function handlePwaKeydown(e) {
+      if (e.key === 'Escape') {
+        closePwaModal();
+      }
+    }
+
+    async function triggerNativePwaInstall() {
+      if (!deferredPwaPrompt) return;
+      deferredPwaPrompt.prompt();
+      const choice = await deferredPwaPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        closePwaModal();
+      }
+      deferredPwaPrompt = null;
     }
   </script>
 </body>
