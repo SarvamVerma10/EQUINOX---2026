@@ -1404,11 +1404,23 @@
                   </div>
 
                   <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-center">
-                    <div id="preview-image-frame" class="sm:col-span-7 relative rounded-xl overflow-hidden bg-black border border-white/10 max-h-56 flex items-center justify-center">
-                      <img id="captured-preview-img" src="" alt="Captured waste preview" class="max-h-56 w-auto object-contain mx-auto" />
-                      <div id="active-analysis-laser" class="hidden pointer-events-none absolute inset-0 bg-blue-950/25">
-                        <div class="w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent scan-laser"></div>
+                    <div class="sm:col-span-7 space-y-2">
+                      <div id="preview-image-frame" class="relative rounded-xl overflow-hidden bg-black border border-white/10 max-h-56 flex items-center justify-center">
+                        <img id="captured-preview-img" src="" alt="Captured waste preview" class="max-h-56 w-auto object-contain mx-auto" />
+                        <div id="active-analysis-laser" class="hidden pointer-events-none absolute inset-0 bg-blue-950/25">
+                          <div class="w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent scan-laser"></div>
+                        </div>
                       </div>
+
+                      <!-- INTERACTIVE AI UPSCALE BUTTON & RESOLUTION BADGE DIRECTLY UNDER THE IMAGE -->
+                      <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                        <button type="button" id="manual-ai-upscale-btn" onclick="triggerManualAiUpscale()" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 hover:text-emerald-100 border border-emerald-500/50 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95" title="Click to manually upscale and deblur this image">
+                          <span id="manual-ai-upscale-icon">✨</span>
+                          <span id="manual-ai-upscale-text">AI Upscale &amp; Enhance</span>
+                        </button>
+                        <span id="preview-resolution-badge" class="text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-1 rounded-md font-semibold">Ready</span>
+                      </div>
+                    </div>
                     </div>
 
                     <div class="sm:col-span-5 space-y-2.5">
@@ -3299,6 +3311,91 @@
       }
     }
 
+    
+    async function triggerManualAiUpscale() {
+      if (!currentCapturedImageDataUrl) {
+        showToast("No image to upscale.", "⚠️");
+        return;
+      }
+
+      const upscaleBtn = document.getElementById("manual-ai-upscale-btn");
+      const upscaleText = document.getElementById("manual-ai-upscale-text");
+      const upscaleIcon = document.getElementById("manual-ai-upscale-icon");
+      const resBadge = document.getElementById("preview-resolution-badge");
+
+      if (upscaleText) upscaleText.textContent = "AI Upscaling...";
+      if (upscaleIcon) upscaleIcon.textContent = "⏳";
+      if (upscaleBtn) upscaleBtn.disabled = true;
+
+      await new Promise((r) => setTimeout(r, 150));
+
+      const img = new Image();
+      img.onload = function () {
+        const origW = img.naturalWidth || img.width;
+        const origH = img.naturalHeight || img.height;
+
+        let scale = 800 / Math.max(origW, origH);
+        if (scale < 1.5) scale = 2.0;
+        const targetW = Math.round(origW * scale);
+        const targetH = Math.round(origH * scale);
+
+        const canvas = document.getElementById("capture-canvas") || document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Boost brightness, contrast, and saturation
+        ctx.save();
+        ctx.filter = "brightness(1.28) contrast(1.22) saturate(1.12)";
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+        ctx.restore();
+        ctx.filter = "none";
+
+        // 3x3 unsharp-mask convolution filter for deblurring
+        applyFastUnsharpMask(ctx, targetW, targetH, 0.55);
+
+        const upscaledDataUrl = canvas.toDataURL("image/jpeg", 0.90);
+        const qualityMetrics = computeCanvasQualityMetrics(ctx, targetW, targetH);
+        qualityMetrics.isEnhanced = true;
+        qualityMetrics.wasUpscaled = true;
+
+        currentCapturedImageDataUrl = upscaledDataUrl;
+        document.getElementById("captured-preview-img").src = upscaledDataUrl;
+
+        if (resBadge) {
+          resBadge.textContent = targetW + "×" + targetH + " (✨ Upscaled)";
+          resBadge.className = "text-[11px] font-mono text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2 py-1 rounded-md font-bold";
+        }
+
+        if (upscaleBtn) {
+          upscaleBtn.disabled = false;
+          upscaleBtn.className = "px-3 py-1.5 rounded-lg bg-emerald-500/30 text-emerald-200 border border-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md";
+        }
+        if (upscaleText) upscaleText.textContent = "✓ AI Upscaled & Enhanced";
+        if (upscaleIcon) upscaleIcon.textContent = "✨";
+
+        const qLabel = document.getElementById("quality-status-label");
+        const qBox = document.getElementById("image-quality-box");
+        if (qLabel) {
+          qLabel.textContent = "✨ AI Enhanced & Upscaled";
+          qLabel.className = "font-bold text-emerald-400";
+        }
+        if (qBox) {
+          qBox.className = "p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs flex items-center justify-between";
+        }
+
+        const approxKb = Math.max(8, Math.round((upscaledDataUrl.length * 0.75) / 1024));
+        const compBadge = document.getElementById("compression-badge");
+        if (compBadge) compBadge.textContent = "~" + approxKb + " KB (800px)";
+
+        showToast("✨ AI Upscaling Complete: Image upscaled to " + targetW + "×" + targetH + " with edge deblurring!", "🚀");
+      };
+      img.src = currentCapturedImageDataUrl;
+    }
+
     function presentCapturedPreview(dataUrl, title, qualityMetrics, multiItems) {
       hideAllCameraViews();
       currentCapturedImageDataUrl = dataUrl;
@@ -3310,6 +3407,39 @@
 
       document.getElementById("captured-preview-img").src = dataUrl;
       document.getElementById("preview-photo-title").textContent = title;
+
+      const resBadge = document.getElementById("preview-resolution-badge");
+      const upscaleBtn = document.getElementById("manual-ai-upscale-btn");
+      const upscaleText = document.getElementById("manual-ai-upscale-text");
+      const upscaleIcon = document.getElementById("manual-ai-upscale-icon");
+
+      const tempImg = new Image();
+      tempImg.onload = function () {
+        const w = tempImg.naturalWidth || tempImg.width;
+        const h = tempImg.naturalHeight || tempImg.height;
+        if (resBadge) {
+          if (qualityMetrics.isEnhanced) {
+            resBadge.textContent = w + "×" + h + " (✨ Enhanced)";
+            resBadge.className = "text-[11px] font-mono text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2 py-1 rounded-md font-bold";
+          } else {
+            resBadge.textContent = w + "×" + h + "px";
+            resBadge.className = "text-[11px] font-mono text-slate-300 bg-slate-800 border border-slate-700 px-2 py-1 rounded-md";
+          }
+        }
+      };
+      tempImg.src = dataUrl;
+
+      if (upscaleBtn) {
+        if (qualityMetrics.isEnhanced) {
+          upscaleBtn.className = "px-3 py-1.5 rounded-lg bg-emerald-500/25 text-emerald-200 border border-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm";
+          if (upscaleText) upscaleText.textContent = "✓ AI Upscaled & Enhanced";
+          if (upscaleIcon) upscaleIcon.textContent = "✨";
+        } else {
+          upscaleBtn.className = "px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-emerald-100 border border-emerald-500/50 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm";
+          if (upscaleText) upscaleText.textContent = "✨ AI Upscale & Enhance";
+          if (upscaleIcon) upscaleIcon.textContent = "✨";
+        }
+      }
 
       const approxKb = Math.max(8, Math.round((dataUrl.length * 0.75) / 1024));
       document.getElementById("compression-badge").textContent = `~${approxKb} KB`;

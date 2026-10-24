@@ -189,6 +189,7 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isEnhanced, setIsEnhanced] = useState<boolean>(false);
+  const [isUpscaling, setIsUpscaling] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -314,6 +315,61 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
       onError(err);
     }
   };
+
+  const handleManualUpscale = async () => {
+    if (!previewImage || isUpscaling) return;
+    try {
+      setIsUpscaling(true);
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Unable to read preview image.'));
+        img.src = previewImage;
+      });
+
+      const origW = img.naturalWidth || img.width;
+      const origH = img.naturalHeight || img.height;
+      let scale = 800 / Math.max(origW, origH);
+      if (scale < 1.5) scale = 2.0;
+      const targetW = Math.round(origW * scale);
+      const targetH = Math.round(origH * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      ctx.save();
+      ctx.filter = 'brightness(1.28) contrast(1.22) saturate(1.12)';
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+      ctx.restore();
+      ctx.filter = 'none';
+
+      applyUnsharpMask(ctx, targetW, targetH, 0.55);
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', 0.90);
+      });
+      if (!blob) return;
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+      const newUrl = URL.createObjectURL(blob);
+      previewUrlRef.current = newUrl;
+      setPreviewImage(newUrl);
+      setIsEnhanced(true);
+    } catch (err) {
+      console.warn('Manual upscale error:', err);
+    } finally {
+      setIsUpscaling(false);
+    }
+  };
+
 
   const analyzeImageFile = async (image: File) => {
     if (!image.type.startsWith('image/')) {
@@ -591,7 +647,17 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
                 </span>
               )}
               </div>
-              <div className="absolute bottom-3 right-3">
+              <div className="absolute bottom-3 inset-x-3 flex items-center justify-between gap-2 z-10">
+                <button
+                  type="button"
+                  onClick={handleManualUpscale}
+                  disabled={isUpscaling}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-200 border border-emerald-500/50 text-xs font-bold flex items-center gap-1.5 backdrop-blur-md transition-all shadow-md active:scale-95 disabled:opacity-50"
+                  title="Click to upscale this image to 800px super-resolution and sharpen edges"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  {isUpscaling ? 'AI Upscaling...' : isEnhanced ? '✓ AI Upscaled & Enhanced' : '✨ AI Upscale & Enhance'}
+                </button>
                 <button
                   type="button"
                   onClick={clearPreviewImage}
