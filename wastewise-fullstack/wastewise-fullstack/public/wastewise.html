@@ -6563,7 +6563,7 @@
       const svgArt = build3DCategorySVG(card.categoryKey);
 
       const HINDI_FLASHCARD_MAP = {
-        "flash-wet-compost": {
+        "flash-organic": {
           title: "गीला व रसोई जैविक कचरा",
           tagPill: "🌱 हरा डिब्बा (Wet)",
           handNote: "“तरल पदार्थ निकालें — कोई प्लास्टिक लाइनर नहीं।”",
@@ -6571,12 +6571,12 @@
           floatingChips: ["🍌 केले का छिलका", "☕ चायपत्ती", "🥬 सब्जियों के छिलके"],
           ruleSteps: ["अतिरिक्त तरल पदार्थ निकालें", "हरे गीले कचरे के डिब्बे में डालें", "प्लास्टिक की थैलियों में कभी न बांधें"]
         },
-        "flash-dry-recycle": {
+        "flash-recyclable": {
           title: "साफ सूखा पुनर्चक्रण योग्य",
           tagPill: "♻️ नीला डिब्बा (Dry)",
           handNote: "“धोएं, सुखाएं और चपटा करें — इसे नया जीवन दें।”",
           summary: "एल्युमीनियम के डिब्बे, पीईटी प्लास्टिक की बोतलें, गत्ता और साफ सूखा कागज।",
-          floatingChips: ["🥫 एल्युमीनियम कैन", "🧴 पीईटी बोतल", "📦 गत्ते का डिब्बा"],
+          floatingChips: ["🥫 एल्युमीनियम कैन", "📦 कार्डबोर्ड", "🧴 प्लास्टिक बोतल"],
           ruleSteps: ["कैन व बोतलों को पानी से धोएं", "डिब्बों को चपटा करके जगह बचाएं", "नीले सूखे रीसाइक्लिंग डिब्बे में डालें"]
         },
         "flash-medical-sanitary": {
@@ -6613,14 +6613,12 @@
         }
       };
 
-      const cData = isHi && HINDI_FLASHCARD_MAP[card.id] ? {
-        title: HINDI_FLASHCARD_MAP[card.id].title,
-        tagPill: HINDI_FLASHCARD_MAP[card.id].tagPill,
-        handNote: HINDI_FLASHCARD_MAP[card.id].handNote,
-        summary: HINDI_FLASHCARD_MAP[card.id].summary,
-        floatingChips: HINDI_FLASHCARD_MAP[card.id].floatingChips,
-        ruleSteps: HINDI_FLASHCARD_MAP[card.id].ruleSteps
-      } : card;
+      const title = (isHi && HINDI_FLASHCARD_MAP[card.id]) ? HINDI_FLASHCARD_MAP[card.id].title : card.title;
+      const tagPill = (isHi && HINDI_FLASHCARD_MAP[card.id]) ? HINDI_FLASHCARD_MAP[card.id].tagPill : card.tagPill;
+      const handNote = (isHi && HINDI_FLASHCARD_MAP[card.id]) ? HINDI_FLASHCARD_MAP[card.id].handNote : card.handNote;
+      const summary = (isHi && HINDI_FLASHCARD_MAP[card.id]) ? HINDI_FLASHCARD_MAP[card.id].summary : card.summary;
+      const floatingChips = (isHi && HINDI_FLASHCARD_MAP[card.id]) ? HINDI_FLASHCARD_MAP[card.id].floatingChips : card.floatingChips;
+      const ruleSteps = (isHi && HINDI_FLASHCARD_MAP[card.id]) ? HINDI_FLASHCARD_MAP[card.id].ruleSteps : card.ruleSteps;
 
       return `
         <div
@@ -6631,47 +6629,84 @@
           data-flipped="false"
           tabindex="0"
           role="region"
-          aria-label="${cData.title} 3D Flashcard"
+          aria-label="${title} 3D Flashcard"
           style="--card-accent: ${card.accent}; --card-glow: ${card.glow};"
         >
           <div class="ac-card-body flex flex-col justify-between gap-4">
             <div class="ac-card-glare" aria-hidden="true"></div>
 
+            <!-- Top Row: Kicker + Bin Pill (translateZ: 50) -->
             <div class="ac-card-item flex items-center justify-between gap-2" data-translate-z="50">
               <span class="font-mono text-[10px] tracking-widest uppercase text-[#5F6368]">${card.cardNumber}</span>
               <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#F1F3F4] border border-[#DADCE0] text-[#202124] shadow-sm">
-                ${cData.tagPill}
+                ${tagPill}
               </span>
             </div>
 
+            <!-- Title & Handwritten Note (translateZ: 65) -->
             <div class="ac-card-item space-y-1" data-translate-z="65">
-              <h3 class="font-display text-xl font-bold text-[#202124] leading-tight">${cData.title}</h3>
-              <p class="font-note text-[1.05rem] text-[#1A73E8] leading-snug">${cData.handNote}</p>
+              <h3 class="font-display text-xl font-bold text-[#202124] leading-tight">${title}</h3>
+              <p class="font-note text-[1.05rem] text-[#1A73E8] leading-snug">${handNote}</p>
             </div>
 
-            <div class="ac-card-item relative h-40 flex items-center justify-center my-1" data-translate-z="80">
-              <div class="w-28 h-28 flex items-center justify-center transform group-hover/card:scale-110 transition-transform duration-500">
-                ${svgArt}
+            <!-- FRONT FACE: 3D Floating Visual Stage + Floating Chips (translateZ: 100) -->
+            <div class="ac-flashcard-front space-y-3.5">
+              <div
+                class="ac-card-item ac-flashcard-stage ${card.gradClass} p-4"
+                data-translate-z="100"
+                data-rotate-x="4"
+                data-rotate-z="-2"
+              >
+                <div class="pointer-events-none absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/20 blur-xl"></div>
+                <div class="pointer-events-none absolute -left-8 -bottom-8 w-28 h-28 rounded-full bg-black/25 blur-xl"></div>
+
+                <div class="relative z-10 flex items-center justify-between w-full gap-3">
+                  <div class="w-20 h-20 rounded-2xl bg-black/25 backdrop-blur-md border border-white/25 p-2.5 flex items-center justify-center shrink-0 shadow-2xl">
+                    ${svgArt}
+                  </div>
+                  <div class="flex flex-col items-end gap-1.5">
+                    ${floatingChips.map((chip, idx) => `
+                      <span
+                        class="ac-card-item px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-[#202124] border border-white/60 backdrop-blur-md shadow-md"
+                        data-translate-z="${115 - idx * 12}"
+                      >
+                        ${chip}
+                      </span>
+                    `).join("")}
+                  </div>
+                </div>
               </div>
-              <div class="pointer-events-none absolute inset-0 flex flex-wrap items-center justify-between gap-2 p-1">
-                <span class="ac-chip ac-chip-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/95 text-[#202124] border border-[#DADCE0] shadow-md transform -rotate-6">
-                  ${cData.floatingChips[0]}
-                </span>
-                <span class="ac-chip ac-chip-2 text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/95 text-[#202124] border border-[#DADCE0] shadow-md transform rotate-6 self-end">
-                  ${cData.floatingChips[1]}
-                </span>
+
+              <p class="ac-card-item text-xs text-[#5F6368] leading-relaxed line-clamp-2" data-translate-z="45">
+                ${summary}
+              </p>
+            </div>
+
+            <!-- BACK FACE: Flipped Ward Rulebook Excerpt & Steps (translateZ: 85) -->
+            <div class="ac-flashcard-back space-y-3">
+              <div
+                class="ac-card-item rounded-2xl bg-[#F8F9FA] border border-[#DADCE0] p-3.5 space-y-2 shadow-inner"
+                data-translate-z="85"
+              >
+                <div class="flex items-center justify-between text-[11px] font-mono text-[#1A73E8]">
+                  <span>📖 ${isHi ? "वार्ड नियम पुस्तिका" : "Ward Rulebook"}</span>
+                  <span>${card.ruleSection}</span>
+                </div>
+                <blockquote class="text-xs italic text-[#202124] border-l-2 border-[#34A853] pl-2.5 py-0.5">
+                  "${card.ruleExcerpt}"
+                </blockquote>
+                <ul class="space-y-1 text-[11px] text-[#5F6368] list-disc pl-4 pt-1">
+                  ${ruleSteps.map((st) => `<li>${st}</li>`).join("")}
+                </ul>
               </div>
             </div>
 
-            <p class="ac-card-item text-xs text-[#5F6368] line-clamp-2 leading-relaxed" data-translate-z="40">
-              ${cData.summary}
-            </p>
-
-            <div class="ac-card-item pt-2 border-t border-[#DADCE0] flex items-center justify-between gap-2" data-translate-z="55">
+            <!-- Footer Actions (translateZ: 40) -->
+            <div class="ac-card-item pt-2 border-t border-[#DADCE0] flex items-center justify-between gap-2" data-translate-z="40">
               <button
                 type="button"
-                onclick="flipAceternityCard('${domId}')"
-                class="px-3 py-1.5 rounded-xl bg-white hover:bg-[#F1F3F4] text-[#202124] text-xs font-bold border border-[#DADCE0] transition-colors shadow-sm flex items-center gap-1"
+                onclick="toggle3DFlashcardFlip('${domId}', event)"
+                class="px-3.5 py-2 rounded-xl bg-[#F1F3F4] hover:bg-[#E8EAED] border border-[#DADCE0] text-xs font-bold text-[#202124] transition-colors flex items-center gap-1 shadow-sm"
               >
                 <span>↻</span>
                 <span>${isHi ? "नियम देखें" : "Flip Rule"}</span>
@@ -6679,46 +6714,9 @@
               <button
                 type="button"
                 onclick="quickAnalyzeSample('${card.sampleKey}')"
-                class="px-3.5 py-1.5 rounded-xl bg-[#4285F4] text-white hover:bg-[#1A73E8] text-xs font-extrabold transition-colors shadow-sm"
+                class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 text-xs font-extrabold transition-colors shadow-md"
               >
                 ${isHi ? "स्कैनर में आज़माएं →" : "Try in Scanner →"}
-              </button>
-            </div>
-          </div>
-
-          <div class="ac-card-back flex flex-col justify-between gap-3 text-[#202124]" aria-hidden="true">
-            <div class="flex items-center justify-between gap-2 border-b border-[#DADCE0] pb-2">
-              <span class="text-[10px] font-mono uppercase tracking-widest text-[#1A73E8] font-bold">${card.ruleSection}</span>
-              <button
-                type="button"
-                onclick="flipAceternityCard('${domId}')"
-                class="text-xs text-[#5F6368] hover:text-[#202124] font-bold px-2 py-0.5 rounded-lg hover:bg-black/5"
-              >
-                ✕ ${isHi ? "वापस" : "Back"}
-              </button>
-            </div>
-
-            <div class="space-y-1.5">
-              <h4 class="text-xs font-mono uppercase tracking-wider text-[#5F6368] font-bold">${isHi ? "आधिकारिक वार्ड नियम" : "Official Ward Rule"}</h4>
-              <blockquote class="text-xs italic text-[#202124] bg-white p-3 rounded-xl border border-[#DADCE0] border-l-4 border-l-[#4285F4]">
-                "${card.ruleExcerpt}"
-              </blockquote>
-            </div>
-
-            <div class="space-y-1">
-              <h4 class="text-xs font-mono uppercase tracking-wider text-[#5F6368] font-bold">${isHi ? "निपटान चरण" : "Required Action"}</h4>
-              <ul class="text-xs text-[#202124] space-y-1 list-disc pl-4">
-                ${cData.ruleSteps.map((s) => `<li>${s}</li>`).join("")}
-              </ul>
-            </div>
-
-            <div class="pt-2 border-t border-[#DADCE0] flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onclick="quickAnalyzeSample('${card.sampleKey}')"
-                class="w-full py-2 rounded-xl bg-[#4285F4] text-white hover:bg-[#1A73E8] text-xs font-extrabold transition-colors shadow-sm text-center"
-              >
-                ${isHi ? "इस आइटम का परीक्षण करें" : "Test This Item in Scanner"}
               </button>
             </div>
           </div>
