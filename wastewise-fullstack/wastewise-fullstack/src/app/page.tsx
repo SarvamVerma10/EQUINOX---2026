@@ -23,7 +23,7 @@ interface ReferenceMessage {
   [key: string]: unknown;
 }
 
-const frameUrl = '/wastewise.html?v=og-flashcard-square-2026';
+const frameUrl = '/wastewise.html?v=flashcard-button-contrast-fix-2026';
 const wifiUrl = 'http://10.24.23.215:3000/';
 
 /**

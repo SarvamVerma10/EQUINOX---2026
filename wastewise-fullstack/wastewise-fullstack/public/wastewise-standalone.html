@@ -322,6 +322,22 @@
       transform: translate3d(0px, 0px, 0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
       will-change: transform;
     }
+    .ac-try-scanner-btn {
+      background-color: #FFFFFF !important;
+      color: #0F172A !important;
+      border: 1px solid #E2E8F0 !important;
+      font-weight: 800 !important;
+    }
+    html[data-color-mode="dark"] .ac-try-scanner-btn {
+      background-color: #FFFFFF !important;
+      color: #0B101B !important;
+      border: 1px solid #FFFFFF !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+    }
+    .ac-try-scanner-btn:hover {
+      background-color: #F1F5F9 !important;
+      color: #000000 !important;
+    }
     .ac-card-glare {
       position: absolute;
       inset: 0;
@@ -6714,7 +6730,8 @@
               <button
                 type="button"
                 onclick="quickAnalyzeSample('${card.sampleKey}')"
-                class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 text-xs font-extrabold transition-colors shadow-md"
+                class="ac-try-scanner-btn px-4 py-2 rounded-xl text-xs font-extrabold transition-all shadow-md cursor-pointer"
+                style="background-color: #FFFFFF !important; color: #0B101B !important;"
               >
                 ${isHi ? "स्कैनर में आज़माएं →" : "Try in Scanner →"}
               </button>
