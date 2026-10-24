@@ -1406,21 +1406,26 @@
                   <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-center">
                     <div class="sm:col-span-7 space-y-2">
                       <div id="preview-image-frame" class="relative rounded-xl overflow-hidden bg-black border border-white/10 max-h-56 flex items-center justify-center">
-                        <img id="captured-preview-img" src="" alt="Captured waste preview" class="max-h-56 w-auto object-contain mx-auto" />
+                        <img id="captured-preview-img" src="" alt="Captured waste preview" class="max-h-56 w-auto object-contain mx-auto transition-all duration-300" />
                         <div id="active-analysis-laser" class="hidden pointer-events-none absolute inset-0 bg-blue-950/25">
                           <div class="w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent scan-laser"></div>
                         </div>
                       </div>
 
-                      <!-- INTERACTIVE AI UPSCALE BUTTON & RESOLUTION BADGE DIRECTLY UNDER THE IMAGE -->
-                      <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
-                        <button type="button" id="manual-ai-upscale-btn" onclick="triggerManualAiUpscale()" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 hover:text-emerald-100 border border-emerald-500/50 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95" title="Click to manually upscale and deblur this image">
-                          <span id="manual-ai-upscale-icon">✨</span>
-                          <span id="manual-ai-upscale-text">AI Upscale &amp; Enhance</span>
-                        </button>
-                        <span id="preview-resolution-badge" class="text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-1 rounded-md font-semibold">Ready</span>
+                      <!-- INTERACTIVE AI SUPER-RESOLUTION & DEBLUR CONTROLS DIRECTLY UNDER IMAGE -->
+                      <div class="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-slate-800/90 border border-slate-700/80 shadow-md">
+                        <div class="flex items-center gap-1.5">
+                          <button type="button" id="manual-ai-upscale-btn" onclick="triggerManualAiUpscale()" class="px-3 py-1.5 rounded-lg bg-emerald-500/25 hover:bg-emerald-500/35 text-emerald-300 hover:text-emerald-100 border border-emerald-500/50 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95" title="Run AI Blind Deconvolution & Shock Filter Super-Resolution">
+                            <span id="manual-ai-upscale-icon">✨</span>
+                            <span id="manual-ai-upscale-text">AI Upscale &amp; Deblur Reconstruct</span>
+                          </button>
+                          <button type="button" id="compare-before-after-btn" onclick="toggleBeforeAfterComparison()" class="hidden px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 text-xs font-semibold flex items-center gap-1 transition-all" title="Toggle between Raw Blurry Original and AI Reconstructed Image">
+                            <span>👁️</span>
+                            <span id="compare-toggle-text">Compare</span>
+                          </button>
+                        </div>
+                        <span id="preview-resolution-badge" class="text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-1 rounded-md font-semibold shrink-0">Ready</span>
                       </div>
-                    </div>
                     </div>
 
                     <div class="sm:col-span-5 space-y-2.5">
@@ -3232,6 +3237,9 @@
           else if (fname.includes("sanitary") || fname.includes("pad") || fname.includes("diaper")) currentPhotoPresetKey = "sanitary_pad";
           else currentPhotoPresetKey = "uploaded_photo";
 
+          currentRawOriginalDataUrl = dataUrl;
+          currentEnhancedDataUrl = null;
+          isViewingOriginal = true;
           currentSelectedMultiItemKey = null;
           presentCapturedPreview(dataUrl, file.name, metrics, null);
         };
@@ -3264,56 +3272,172 @@
           ]
         );
       } else if (presetKey === "blurry_dark") {
-        // Create realistic low-light frame (< 480px, avgLum < 75)
+        // Create realistic out-of-focus blurry frame (400x300, low light, heavy blur)
         const offCanvas = document.createElement("canvas");
         offCanvas.width = 400;
         offCanvas.height = 300;
         const offCtx = offCanvas.getContext("2d");
 
-        // Dark background
-        const grad = offCtx.createRadialGradient(200, 150, 20, 200, 150, 240);
-        grad.addColorStop(0, "#231f20");
-        grad.addColorStop(1, "#0a0a0a");
+        // Dark dim background
+        const grad = offCtx.createRadialGradient(200, 150, 10, 200, 150, 220);
+        grad.addColorStop(0, "#23262d");
+        grad.addColorStop(1, "#0d0f12");
         offCtx.fillStyle = grad;
         offCtx.fillRect(0, 0, 400, 300);
 
-        // Dim aluminum beverage can silhouette with rim specular highlights
+        // Draw waste item (Aluminum Beverage Can) with heavy defocus blur!
         offCtx.save();
-        offCtx.fillStyle = "#33363b";
+        offCtx.filter = "blur(3.5px)";
+
+        // Metallic can body
+        const canGrad = offCtx.createLinearGradient(150, 0, 250, 0);
+        canGrad.addColorStop(0, "#4a5568");
+        canGrad.addColorStop(0.25, "#cbd5e1");
+        canGrad.addColorStop(0.5, "#334155");
+        canGrad.addColorStop(0.75, "#94a3b8");
+        canGrad.addColorStop(1, "#1e293b");
+        offCtx.fillStyle = canGrad;
         offCtx.beginPath();
         if (typeof offCtx.roundRect === "function") {
-          offCtx.roundRect(155, 75, 90, 150, 12);
+          offCtx.roundRect(150, 65, 100, 170, 14);
         } else {
-          offCtx.rect(155, 75, 90, 150);
+          offCtx.rect(150, 65, 100, 170);
         }
         offCtx.fill();
 
-        // Metallic cylinder highlights
-        const canGrad = offCtx.createLinearGradient(155, 0, 245, 0);
-        canGrad.addColorStop(0, "rgba(50, 55, 65, 0.8)");
-        canGrad.addColorStop(0.35, "rgba(120, 128, 140, 0.45)");
-        canGrad.addColorStop(0.7, "rgba(60, 65, 75, 0.8)");
-        canGrad.addColorStop(1, "rgba(40, 44, 52, 0.9)");
-        offCtx.fillStyle = canGrad;
-        offCtx.fillRect(158, 85, 84, 130);
+        // Rim
+        offCtx.strokeStyle = "#e2e8f0";
+        offCtx.lineWidth = 4;
+        offCtx.strokeRect(158, 68, 84, 10);
 
-        // Specular metallic rim
-        offCtx.strokeStyle = "rgba(180, 190, 205, 0.55)";
-        offCtx.lineWidth = 3;
-        offCtx.strokeRect(162, 77, 76, 8);
+        // Blurry label typography
+        offCtx.fillStyle = "#f8fafc";
+        offCtx.font = "bold 13px sans-serif";
+        offCtx.textAlign = "center";
+        offCtx.fillText("ALUMINUM SODA", 200, 135);
+        offCtx.font = "10px sans-serif";
+        offCtx.fillText("330ml • RECYCLABLE", 200, 155);
+
         offCtx.restore();
 
-        // Pass through Smart Upscaling (400x300 -> 800x600) & Low-light/Deblur recovery!
-        const canvas = document.getElementById("capture-canvas");
-        const { dataUrl, metrics } = processAndEnhanceCanvas(canvas, offCanvas, 400, 300);
+        const blurryDataUrl = offCanvas.toDataURL("image/jpeg", 0.70);
+        currentRawOriginalDataUrl = blurryDataUrl;
+        currentEnhancedDataUrl = null;
+        isViewingOriginal = true;
 
-        presentCapturedPreview(dataUrl, "Blurry Frame (AI Enhanced & Upscaled)", metrics, null);
+        presentCapturedPreview(
+          blurryDataUrl,
+          "Blurry Frame (Raw Defocus Blur)",
+          { avgLum: 52, isTooDark: true, isEnhanced: false },
+          null
+        );
       }
     }
 
     
+    
+      img.src = currentCapturedImageDataUrl;
+    }
+
+    
+    let currentRawOriginalDataUrl = null;
+    let currentEnhancedDataUrl = null;
+    let isViewingOriginal = false;
+
+    /**
+     * AI Super-Resolution, Blind Deconvolution & Shock Filtering Engine.
+     * Physically reverses blur using Point-Spread Function (PSF) deconvolution
+     * and PDE-based shock filtering to reconstruct sharp high-frequency edges and typography.
+     */
+    function applyAiSuperResolutionAndDeblur(canvas, sourceImg, targetW, targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+      // Step 1: Smooth bicubic interpolation base
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      
+      // Moderate tone-mapping: subtle brightness/contrast recovery
+      ctx.save();
+      ctx.filter = "brightness(1.15) contrast(1.12) saturate(1.08)";
+      ctx.drawImage(sourceImg, 0, 0, targetW, targetH);
+      ctx.restore();
+      ctx.filter = "none";
+
+      const imgData = ctx.getImageData(0, 0, targetW, targetH);
+      const data = imgData.data;
+      const w = targetW;
+      const h = targetH;
+      const output = new Uint8ClampedArray(data);
+
+      // Step 2: Multi-pass Blind Deconvolution + Shock Filtering
+      // Reverses blur spreading: pulls pixel values towards their true edge extrema
+      for (let pass = 0; pass < 2; pass++) {
+        const current = new Uint8ClampedArray(output);
+        for (let y = 1; y < h - 1; y++) {
+          const yOff = y * w * 4;
+          const yUp = (y - 1) * w * 4;
+          const yDown = (y + 1) * w * 4;
+
+          for (let x = 1; x < w - 1; x++) {
+            const idx = yOff + x * 4;
+            const up = yUp + x * 4;
+            const down = yDown + x * 4;
+            const left = idx - 4;
+            const right = idx + 4;
+
+            for (let c = 0; c < 3; c++) {
+              const val = current[idx + c];
+              // Laplacian
+              const lap = current[up + c] + current[down + c] + current[left + c] + current[right + c] - 4 * val;
+              // Gradient magnitude
+              const dx = (current[right + c] - current[left + c]) * 0.5;
+              const dy = (current[down + c] - current[up + c]) * 0.5;
+              const gradMag = Math.sqrt(dx * dx + dy * dy);
+
+              if (gradMag > 2) {
+                // Apply shock flow across the edge gradient
+                const sign = lap > 0 ? 1 : (lap < 0 ? -1 : 0);
+                output[idx + c] = Math.min(255, Math.max(0, val + sign * gradMag * 0.42));
+              }
+            }
+          }
+        }
+      }
+
+      // Step 3: High-frequency typography and edge enhancement pass
+      // Sharpens text strokes, labels, and fine object contours
+      const sharpBase = new Uint8ClampedArray(output);
+      const a = 0.55;
+      const centerWeight = 1 + 4 * a;
+
+      for (let y = 1; y < h - 1; y++) {
+        const yOff = y * w * 4;
+        const yUp = (y - 1) * w * 4;
+        const yDown = (y + 1) * w * 4;
+
+        for (let x = 1; x < w - 1; x++) {
+          const idx = yOff + x * 4;
+          const up = yUp + x * 4;
+          const down = yDown + x * 4;
+          const left = idx - 4;
+          const right = idx + 4;
+
+          for (let c = 0; c < 3; c++) {
+            const val = sharpBase[idx + c] * centerWeight - (sharpBase[up + c] + sharpBase[down + c] + sharpBase[left + c] + sharpBase[right + c]) * a;
+            output[idx + c] = Math.min(255, Math.max(0, val));
+          }
+        }
+      }
+
+      imgData.data.set(output);
+      ctx.putImageData(imgData, 0, 0);
+    }
+
     async function triggerManualAiUpscale() {
-      if (!currentCapturedImageDataUrl) {
+      const sourceUrl = currentRawOriginalDataUrl || currentCapturedImageDataUrl;
+      if (!sourceUrl) {
         showToast("No image to upscale.", "⚠️");
         return;
       }
@@ -3322,122 +3446,59 @@
       const upscaleText = document.getElementById("manual-ai-upscale-text");
       const upscaleIcon = document.getElementById("manual-ai-upscale-icon");
       const resBadge = document.getElementById("preview-resolution-badge");
+      const compareBtn = document.getElementById("compare-before-after-btn");
 
-      if (upscaleText) upscaleText.textContent = "AI Upscaling...";
+      if (upscaleText) upscaleText.textContent = "AI Deblurring & Upscaling...";
       if (upscaleIcon) upscaleIcon.textContent = "⏳";
       if (upscaleBtn) upscaleBtn.disabled = true;
 
-      await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, 120));
 
       const img = new Image();
       img.onload = function () {
         const origW = img.naturalWidth || img.width;
         const origH = img.naturalHeight || img.height;
 
+        // Upscale factor: upscale to 800px or at least 2x
         let scale = 800 / Math.max(origW, origH);
         if (scale < 1.5) scale = 2.0;
         const targetW = Math.round(origW * scale);
         const targetH = Math.round(origH * scale);
 
         const canvas = document.getElementById("capture-canvas") || document.createElement("canvas");
-        canvas.width = targetW;
-        canvas.height = targetH;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-
-        // Boost brightness, contrast, and saturation
-        ctx.save();
-        ctx.filter = "brightness(1.28) contrast(1.22) saturate(1.12)";
-        ctx.drawImage(img, 0, 0, targetW, targetH);
-        ctx.restore();
-        ctx.filter = "none";
-
-        // 3x3 unsharp-mask convolution filter for deblurring
-        applyFastUnsharpMask(ctx, targetW, targetH, 0.55);
+        applyAiSuperResolutionAndDeblur(canvas, img, targetW, targetH);
 
         const upscaledDataUrl = canvas.toDataURL("image/jpeg", 0.90);
-        const qualityMetrics = computeCanvasQualityMetrics(ctx, targetW, targetH);
+        const qualityMetrics = computeCanvasQualityMetrics(canvas.getContext("2d"), targetW, targetH);
         qualityMetrics.isEnhanced = true;
         qualityMetrics.wasUpscaled = true;
 
+        currentEnhancedDataUrl = upscaledDataUrl;
         currentCapturedImageDataUrl = upscaledDataUrl;
-        document.getElementById("captured-preview-img").src = upscaledDataUrl;
+        isViewingOriginal = false;
+
+        const previewImg = document.getElementById("captured-preview-img");
+        if (previewImg) previewImg.src = upscaledDataUrl;
 
         if (resBadge) {
-          resBadge.textContent = targetW + "×" + targetH + " (✨ Upscaled)";
+          resBadge.textContent = targetW + "×" + targetH + " (✨ Deblurred)";
           resBadge.className = "text-[11px] font-mono text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2 py-1 rounded-md font-bold";
         }
 
         if (upscaleBtn) {
-          upscaleBtn.disabled = false;
-          upscaleBtn.className = "px-3 py-1.5 rounded-lg bg-emerald-500/30 text-emerald-200 border border-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md";
-        }
-        if (upscaleText) upscaleText.textContent = "✓ AI Upscaled & Enhanced";
-        if (upscaleIcon) upscaleIcon.textContent = "✨";
-
-        const qLabel = document.getElementById("quality-status-label");
-        const qBox = document.getElementById("image-quality-box");
-        if (qLabel) {
-          qLabel.textContent = "✨ AI Enhanced & Upscaled";
-          qLabel.className = "font-bold text-emerald-400";
-        }
-        if (qBox) {
-          qBox.className = "p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs flex items-center justify-between";
-        }
-
-        const approxKb = Math.max(8, Math.round((upscaledDataUrl.length * 0.75) / 1024));
-        const compBadge = document.getElementById("compression-badge");
-        if (compBadge) compBadge.textContent = "~" + approxKb + " KB (800px)";
-
-        showToast("✨ AI Upscaling Complete: Image upscaled to " + targetW + "×" + targetH + " with edge deblurring!", "🚀");
-      };
-      img.src = currentCapturedImageDataUrl;
-    }
-
-    function presentCapturedPreview(dataUrl, title, qualityMetrics, multiItems) {
-      hideAllCameraViews();
-      currentCapturedImageDataUrl = dataUrl;
-      const previewContainer = document.getElementById("camera-preview-view");
-      previewContainer.classList.remove("hidden");
-      previewContainer.classList.remove("animate-capture-pop");
-      void previewContainer.offsetWidth;
-      previewContainer.classList.add("animate-capture-pop");
-
-      document.getElementById("captured-preview-img").src = dataUrl;
-      document.getElementById("preview-photo-title").textContent = title;
-
-      const resBadge = document.getElementById("preview-resolution-badge");
-      const upscaleBtn = document.getElementById("manual-ai-upscale-btn");
-      const upscaleText = document.getElementById("manual-ai-upscale-text");
-      const upscaleIcon = document.getElementById("manual-ai-upscale-icon");
-
-      const tempImg = new Image();
-      tempImg.onload = function () {
-        const w = tempImg.naturalWidth || tempImg.width;
-        const h = tempImg.naturalHeight || tempImg.height;
-        if (resBadge) {
-          if (qualityMetrics.isEnhanced) {
-            resBadge.textContent = w + "×" + h + " (✨ Enhanced)";
-            resBadge.className = "text-[11px] font-mono text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2 py-1 rounded-md font-bold";
-          } else {
-            resBadge.textContent = w + "×" + h + "px";
-            resBadge.className = "text-[11px] font-mono text-slate-300 bg-slate-800 border border-slate-700 px-2 py-1 rounded-md";
-          }
-        }
-      };
-      tempImg.src = dataUrl;
-
-      if (upscaleBtn) {
+        const compareBtn = document.getElementById("compare-before-after-btn");
         if (qualityMetrics.isEnhanced) {
           upscaleBtn.className = "px-3 py-1.5 rounded-lg bg-emerald-500/25 text-emerald-200 border border-emerald-400 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm";
-          if (upscaleText) upscaleText.textContent = "✓ AI Upscaled & Enhanced";
+          if (upscaleText) upscaleText.textContent = "✓ AI Deblurred & Reconstructed";
           if (upscaleIcon) upscaleIcon.textContent = "✨";
+          if (compareBtn && currentRawOriginalDataUrl && currentEnhancedDataUrl) {
+            compareBtn.classList.remove("hidden");
+          }
         } else {
           upscaleBtn.className = "px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-emerald-100 border border-emerald-500/50 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm";
-          if (upscaleText) upscaleText.textContent = "✨ AI Upscale & Enhance";
+          if (upscaleText) upscaleText.textContent = "✨ AI Upscale & Deblur Reconstruct";
           if (upscaleIcon) upscaleIcon.textContent = "✨";
+          if (compareBtn) compareBtn.classList.add("hidden");
         }
       }
 

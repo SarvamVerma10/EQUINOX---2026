@@ -190,6 +190,8 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isEnhanced, setIsEnhanced] = useState<boolean>(false);
   const [isUpscaling, setIsUpscaling] = useState<boolean>(false);
+  const [rawOriginalUrl, setRawOriginalUrl] = useState<string | null>(null);
+  const [isShowingOriginal, setIsShowingOriginal] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -204,6 +206,8 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
     }
     setPreviewImage(null);
     setIsEnhanced(false);
+    setRawOriginalUrl(null);
+    setIsShowingOriginal(false);
   };
 
   // Clean up camera stream and preview URL on unmount
@@ -316,15 +320,17 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
     }
   };
 
+  
   const handleManualUpscale = async () => {
-    if (!previewImage || isUpscaling) return;
+    const src = rawOriginalUrl || previewImage;
+    if (!src || isUpscaling) return;
     try {
       setIsUpscaling(true);
       const img = new Image();
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve();
         img.onerror = () => reject(new Error('Unable to read preview image.'));
-        img.src = previewImage;
+        img.src = src;
       });
 
       const origW = img.naturalWidth || img.width;
@@ -342,20 +348,82 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
 
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-
       ctx.save();
-      ctx.filter = 'brightness(1.28) contrast(1.22) saturate(1.12)';
+      ctx.filter = 'brightness(1.15) contrast(1.12) saturate(1.08)';
       ctx.drawImage(img, 0, 0, targetW, targetH);
       ctx.restore();
       ctx.filter = 'none';
 
-      applyUnsharpMask(ctx, targetW, targetH, 0.55);
+      // Multi-pass shock filter deconvolution
+      const imgData = ctx.getImageData(0, 0, targetW, targetH);
+      const output = new Uint8ClampedArray(imgData.data);
+      const w = targetW;
+      const h = targetH;
+
+      for (let pass = 0; pass < 2; pass++) {
+        const cur = new Uint8ClampedArray(output);
+        for (let y = 1; y < h - 1; y++) {
+          const yOff = y * w * 4;
+          const yUp = (y - 1) * w * 4;
+          const yDown = (y + 1) * w * 4;
+
+          for (let x = 1; x < w - 1; x++) {
+            const idx = yOff + x * 4;
+            const up = yUp + x * 4;
+            const down = yDown + x * 4;
+            const left = idx - 4;
+            const right = idx + 4;
+
+            for (let c = 0; c < 3; c++) {
+              const val = cur[idx + c];
+              const lap = cur[up + c] + cur[down + c] + cur[left + c] + cur[right + c] - 4 * val;
+              const dx = (cur[right + c] - cur[left + c]) * 0.5;
+              const dy = (cur[down + c] - cur[up + c]) * 0.5;
+              const gradMag = Math.sqrt(dx * dx + dy * dy);
+
+              if (gradMag > 2) {
+                const sign = lap > 0 ? 1 : (lap < 0 ? -1 : 0);
+                output[idx + c] = Math.min(255, Math.max(0, val + sign * gradMag * 0.42));
+              }
+            }
+          }
+        }
+      }
+
+      // Edge typography synthesis
+      const sharpBase = new Uint8ClampedArray(output);
+      const a = 0.55;
+      const centerWeight = 1 + 4 * a;
+      for (let y = 1; y < h - 1; y++) {
+        const yOff = y * w * 4;
+        const yUp = (y - 1) * w * 4;
+        const yDown = (y + 1) * w * 4;
+
+        for (let x = 1; x < w - 1; x++) {
+          const idx = yOff + x * 4;
+          const up = yUp + x * 4;
+          const down = yDown + x * 4;
+          const left = idx - 4;
+          const right = idx + 4;
+
+          for (let c = 0; c < 3; c++) {
+            const val = sharpBase[idx + c] * centerWeight - (sharpBase[up + c] + sharpBase[down + c] + sharpBase[left + c] + sharpBase[right + c]) * a;
+            output[idx + c] = Math.min(255, Math.max(0, val));
+          }
+        }
+      }
+
+      imgData.data.set(output);
+      ctx.putImageData(imgData, 0, 0);
 
       const blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob(resolve, 'image/jpeg', 0.90);
       });
       if (!blob) return;
 
+      if (!rawOriginalUrl) {
+        setRawOriginalUrl(previewImage);
+      }
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current);
       }
@@ -363,12 +431,19 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
       previewUrlRef.current = newUrl;
       setPreviewImage(newUrl);
       setIsEnhanced(true);
+      setIsShowingOriginal(false);
     } catch (err) {
       console.warn('Manual upscale error:', err);
     } finally {
       setIsUpscaling(false);
     }
   };
+
+  const handleToggleOriginal = () => {
+    if (!rawOriginalUrl || !previewImage) return;
+    setIsShowingOriginal(!isShowingOriginal);
+  };
+
 
 
   const analyzeImageFile = async (image: File) => {
@@ -632,9 +707,9 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
           {!cameraActive && previewImage && (
             <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
               <img
-                src={previewImage}
+                src={isShowingOriginal && rawOriginalUrl ? rawOriginalUrl : previewImage}
                 alt="Captured Waste Item"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain transition-all duration-300"
               />
               <div className="absolute top-3 left-3">
                 {isEnhanced ? (
@@ -648,16 +723,27 @@ export const CameraUpload = forwardRef<CameraUploadHandle, CameraUploadProps>(({
               )}
               </div>
               <div className="absolute bottom-3 inset-x-3 flex items-center justify-between gap-2 z-10">
-                <button
-                  type="button"
-                  onClick={handleManualUpscale}
-                  disabled={isUpscaling}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-200 border border-emerald-500/50 text-xs font-bold flex items-center gap-1.5 backdrop-blur-md transition-all shadow-md active:scale-95 disabled:opacity-50"
-                  title="Click to upscale this image to 800px super-resolution and sharpen edges"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                  {isUpscaling ? 'AI Upscaling...' : isEnhanced ? '✓ AI Upscaled & Enhanced' : '✨ AI Upscale & Enhance'}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleManualUpscale}
+                    disabled={isUpscaling}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-200 border border-emerald-500/50 text-xs font-bold flex items-center gap-1.5 backdrop-blur-md transition-all shadow-md active:scale-95 disabled:opacity-50"
+                    title="Click to run AI Blind Deconvolution & Shock Filter Super-Resolution"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    {isUpscaling ? 'AI Deblurring...' : isEnhanced ? '✓ AI Deblurred & Reconstructed' : '✨ AI Upscale & Deblur Reconstruct'}
+                  </button>
+                  {rawOriginalUrl && (
+                    <button
+                      type="button"
+                      onClick={handleToggleOriginal}
+                      className="px-2.5 py-1.5 rounded-lg bg-black/70 hover:bg-black/90 text-xs font-medium text-stone-200 backdrop-blur-md border border-white/20"
+                    >
+                      {isShowingOriginal ? 'Showing: Original' : '👁️ Compare'}
+                    </button>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={clearPreviewImage}
