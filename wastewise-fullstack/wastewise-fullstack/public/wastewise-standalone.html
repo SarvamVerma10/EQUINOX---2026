@@ -3995,11 +3995,11 @@
         flipCameraBtn: "Flip camera",
         capturePhotoBtn: "Take photo",
         closeCameraBtn: "Close",
-        confirmAnalyzeBtn: "That’s the one",
+        confirmAnalyzeBtn: "Confirm & Analyze Waste",
         retakeBtn: "Retake",
         checkGuideBtn: "Check the guide",
         sampleItemsLabel: "Quick tests:",
-        nextStepsHeading: "What to do next",
+        nextStepsHeading: "Disposal Steps",
         confirmItemBtn: "Yep, that’s it",
         saveResultBtn: "Save this",
         correctIdentificationBtn: "That’s not right",
@@ -4007,8 +4007,8 @@
         reportIncorrectBtn: "Flag this result",
         recentScansHeading: "Recent scans",
         viewAllHistoryBtn: "Full history →",
-        categoryLegendHeading: "The bins",
-        categoryLegendSub: "",
+        categoryLegendHeading: "Waste Categories",
+        categoryLegendSub: "Local rules, not a generic chart.",
         learnMoreLink: "Read the guide →",
         catBioShort: "Wet / compost",
         catDryShort: "Dry / recycle",
@@ -4016,9 +4016,21 @@
         catSanitaryShort: "Sanitary / medical",
         catGenShort: "General waste",
         catGreyShort: "Not sure yet",
-        historyTitle: "What you scanned",
+        historyTitle: "Saved Scan History",
         clearHistoryBtn: "Clear history",
-        learnHeading: "What goes where"
+        learnHeading: "What goes where",
+        searchPlaceholder: "Type item (peel, can, battery, pad)...",
+        searchBtn: "Search",
+        pwaTitle: "Install WasteWise PWA",
+        pwaDesc: "Fast camera access · Zero installation friction · Works offline",
+        evidenceHeading: "Local Guide Source",
+        pageLabel: "Page",
+        statusRecommended: "Status: RECOMMENDED",
+        statusClarification: "Status: CLARIFICATION NEEDED",
+        statusUnresolved: "Status: UNRESOLVED",
+        confHigh: "High Confidence",
+        confMedium: "Medium Confidence",
+        confLow: "Low Confidence"
       },
       hi: {
         tagline: "जानें। छाँटें। बचाएँ।",
@@ -4027,21 +4039,21 @@
         navLearn: "जानकारी",
         navAuth: "लॉगिन / साइन अप",
         navAuthShort: "लॉगिन",
-        navSettings: "गाइड",
-        manageGuideBtn: "गाइड बदलें",
-        activeLocalityLabel: "चयनित गाइड",
+        navSettings: "वार्ड गाइड",
+        manageGuideBtn: "स्थानीय गाइड",
+        activeLocalityLabel: "चयनित वार्ड",
         changeOrUploadGuide: "गाइड बदलें",
-        heroHeadline: "जानो",
+        heroHeadline: "पहचानो",
         heroHeadline2: "छाँटो",
-        heroSubhead: "हाथ में जो है, कैमरा उस पर लगाओ। हम बताएँगे कि इस वार्ड में वो किस डिब्बे में जाता है।",
-        heroNote: "जज यही याद रखते हैं: स्थानीय नियम, लेक्चर नहीं",
+        heroSubhead: "हाथ में जो भी कचरा है, उस पर कैमरा लगाएं। हम बताएंगे कि आपके वार्ड के नियमानुसार वो किस डिब्बे में जाएगा।",
+        heroNote: "जज यही याद रखते हैं: स्थानीय नियम, कोई भाषण नहीं",
         scanWasteCta: "कैमरा खोलो",
-        uploadPhotoCta: "फोटो लगाओ",
+        uploadPhotoCta: "फोटो चुनें",
         cameraReadyTitle: "कैमरा तैयार है",
-        cameraReadyDesc: "कैमरा खोलो, या कोई सैंपल आज़माओ।",
+        cameraReadyDesc: "कैमरा खोलें, या नीचे दिए गए किसी सैंपल को आज़माएं।",
         openLiveCameraBtn: "कैमरा खोलो",
-        nativeCaptureFallbackBtn: "मीडिया अपलोड करें",
-        instantPhotoPresetsTitle: "सैंपल फोटो",
+        nativeCaptureFallbackBtn: "गैलरी से अपलोड करें",
+        instantPhotoPresetsTitle: "सैंपल कचरा",
         flipCameraBtn: "कैमरा बदलें",
         capturePhotoBtn: "फोटो लें",
         closeCameraBtn: "बंद करें",
@@ -4050,25 +4062,37 @@
         checkGuideBtn: "गाइड जांचें",
         sampleItemsLabel: "त्वरित परीक्षण:",
         nextStepsHeading: "निपटान निर्देश",
-        confirmItemBtn: "पुष्टि करें",
-        saveResultBtn: "सहेजें",
-        correctIdentificationBtn: "सुधारें",
-        scanAnotherBtn: "दूसरा स्कैन",
-        reportIncorrectBtn: "रिपोर्ट करें",
+        confirmItemBtn: "हाँ, यही वस्तु है",
+        saveResultBtn: "परिणाम सहेजें",
+        correctIdentificationBtn: "यह गलत है / सुधारें",
+        scanAnotherBtn: "दूसरा कचरा स्कैन करें",
+        reportIncorrectBtn: "गलत परिणाम रिपोर्ट करें",
         recentScansHeading: "हाल के स्कैन",
-        viewAllHistoryBtn: "पूरा इतिहास →",
-        categoryLegendHeading: "डिब्बे",
-        categoryLegendSub: "",
-        learnMoreLink: "पूरी जानकारी →",
-        catBioShort: "गीला / बायोडिग्रेडेबल",
+        viewAllHistoryBtn: "पूरा इतिहास देखें →",
+        categoryLegendHeading: "कचरा श्रेणियां एवं नियम",
+        categoryLegendSub: "वार्ड के आधिकारिक नियम, कोई सामान्य सूची नहीं।",
+        learnMoreLink: "पूरी गाइड पढ़ें →",
+        catBioShort: "गीला / जैविक",
         catDryShort: "सूखा / रीसायकल",
         catHazShort: "खतरनाक / विशेष",
         catSanitaryShort: "सैनिटरी / मेडिकल",
         catGenShort: "सामान्य कचरा",
-        catGreyShort: "अनिर्णीत",
-        historyTitle: "स्कैन इतिहास",
-        clearHistoryBtn: "इतिहास मिटाएं",
-        learnHeading: "क्या कहाँ जाता है"
+        catGreyShort: "अनिर्णीत / स्पष्ट करें",
+        historyTitle: "सहेजा गया स्कैन इतिहास",
+        clearHistoryBtn: "इतिहास साफ़ करें",
+        learnHeading: "कौन सा कचरा कहाँ जाता है",
+        searchPlaceholder: "कचरे का नाम लिखें (छिलका, कैन, बैटरी, पैड)...",
+        searchBtn: "खोजें",
+        pwaTitle: "WasteWise ऐप इंस्टॉल करें",
+        pwaDesc: "तुरंत कैमरा एक्सेस · बिना डाउनलोड झंझट · ऑफलाइन भी काम करे",
+        evidenceHeading: "स्थानीय गाइड से प्रमाण",
+        pageLabel: "पृष्ठ",
+        statusRecommended: "स्थिति: अनुशंसित (RECOMMENDED)",
+        statusClarification: "स्थिति: स्पष्टीकरण आवश्यक",
+        statusUnresolved: "स्थिति: अनिर्णीत",
+        confHigh: "उच्च सटीकता (High Confidence)",
+        confMedium: "मध्यम सटीकता (Medium Confidence)",
+        confLow: "कम सटीकता (Low Confidence)"
       }
     };
 
@@ -5286,11 +5310,256 @@
     // =========================================================================
     // 9. RENDER 3D RESULT CARD
     // =========================================================================
+
+    // =========================================================================
+    // DYNAMIC HINDI WASTE TRANSLATION ENGINE
+    // Translates any analyzed item, material, instructions, and physical bins
+    // =========================================================================
+    const HINDI_ITEM_MAP = {
+      "aluminum beverage can": "एल्युमीनियम बेवरेज कैन (Aluminum Can)",
+      "aluminum can": "एल्युमीनियम कैन (Aluminum Can)",
+      "soda can": "सोडा कैन (Soda Can)",
+      "crushed aluminum can": "दबा हुआ एल्युमीनियम कैन",
+      "banana peel": "केले का छिलका (Banana Peel)",
+      "fruit peel": "फलों का छिलका",
+      "fruit peel / food": "फलों का छिलका / खाद्य अपशिष्ट",
+      "fruit peel / organic food waste": "फलों का छिलका / जैविक खाद्य अपशिष्ट",
+      "vegetable peel": "सब्जी का छिलका",
+      "apple core": "सेब का अवशेष",
+      "instant noodle packet": "इंस्टेंट नूडल्स पैकेट (Noodles Packet)",
+      "noodle pack": "नूडल्स पैकेट",
+      "aa alkaline battery": "एए एल्कलाइन बैटरी (AA Battery)",
+      "aa battery": "एए बैटरी",
+      "battery": "बैटरी (Battery)",
+      "sanitary pad": "सैनिटरी पैड (Sanitary Pad)",
+      "hygiene napkin": "हाइजीन नैपकिन",
+      "sanitary pad / hygiene napkin": "सैनिटरी पैड / हाइजीन नैपकिन",
+      "pet bottle": "पीईटी प्लास्टिक की बोतल (PET Bottle)",
+      "water bottle": "पानी की प्लास्टिक बोतल",
+      "plastic bottle": "प्लास्टिक की बोतल",
+      "cardboard box": "कार्डबोर्ड / गत्ते का डिब्बा",
+      "cardboard": "गत्ता / कार्डबोर्ड",
+      "glass bottle": "कांच की बोतल",
+      "milk pouch": "दूध की प्लास्टिक थैली",
+      "newspaper": "अखबार / रद्दी कागज",
+      "food scraps": "बचा हुआ खाना (गीला कचरा)",
+      "coffee grounds": "कॉफी वेस्ट",
+      "tea leaves": "चाय की पत्ती",
+      "used syringe": "प्रयुक्त सिरिंज / सुई (बायोमेडिकल)",
+      "used syringe / needle": "प्रयुक्त सिरिंज / सुई",
+      "thermocol": "थर्मोकोल / स्टायरोफोम",
+      "thermocol cup": "थर्मोकोल कप",
+      "chip foil bag": "चिप्स का पैकेट / स्नैक रैपर",
+      "residual wrapper": "अवशेष बहु-परत रैपर",
+      "plastic bag": "प्लास्टिक की थैली",
+      "ceramic mug": "सिरामिक / चीनी मिट्टी का मग",
+      "broken ceramics": "टूटी हुई चीनी मिट्टी",
+      "e-waste": "ई-कचरा / केबल",
+      "unclear object": "अस्पष्ट वस्तु",
+      "unidentified item": "अज्ञात वस्तु"
+    };
+
+    const HINDI_MATERIAL_MAP = {
+      "clean aluminum metal": "साफ एल्युमीनियम धातु (100% पुनर्चक्रण योग्य)",
+      "100% recyclable aluminum": "100% पुनर्चक्रण योग्य एल्युमीनियम",
+      "aluminum": "एल्युमीनियम धातु",
+      "metal": "धातु (Metal)",
+      "organic": "जैविक अपशिष्ट (गीला कचरा)",
+      "organic biomass": "जैविक अपशिष्ट (खाद योग्य)",
+      "plant matter": "वनस्पति अपशिष्ट",
+      "food waste": "खाद्य अपशिष्ट",
+      "clean dry recyclable": "साफ सूखा पुनर्चक्रण योग्य",
+      "multi-layer plastic & aluminum foil": "बहु-परत प्लास्टिक व एल्युमीनियम फॉयल",
+      "alkaline / zinc / heavy metals": "एल्कलाइन / जिंक / भारी धातु (खतरनाक)",
+      "absorbent polymer & plastic film": "अवशोषक पॉलीमर और प्लास्टिक परत",
+      "pet #1 plastic": "पीईटी #1 प्लास्टिक",
+      "pet #1": "पीईटी #1 प्लास्टिक",
+      "hdpe #2": "एचडीपीई #2 प्लास्टिक",
+      "clean cardboard": "साफ कार्डबोर्ड / गत्ता",
+      "corrugated cardboard": "नालीदार गत्ता / कार्डबोर्ड",
+      "mono-layer polypropylene": "मोनो-लेयर पॉलीप्रोपाइलीन प्लास्टिक",
+      "clean dry plastic film": "साफ सूखी प्लास्टिक फिल्म",
+      "low light / blur": "कम रोशनी / धुंधली फोटो",
+      "evaluated against local guide": "स्थानीय वार्ड गाइड अनुसार मूल्यांकित",
+      "unknown": "अज्ञात सामग्री"
+    };
+
+    const HINDI_INSTRUCTION_MAP = {
+      "drain excess liquid.": "अतिरिक्त तरल पदार्थ निकालें।",
+      "remove any stickers or ties.": "स्टिकर या धागे हटा दें।",
+      "place in the wet / compostable bin.": "गीले / कम्पोस्ट वाले हरे डिब्बे में डालें।",
+      "empty and rinse clean.": "खाली करें और पानी से धोकर साफ करें।",
+      "crush lightly to save space.": "जगह बचाने के लिए हल्का दबाकर चपटा करें।",
+      "place in dry recyclables.": "सूखे पुनर्चक्रण योग्य (नीले डिब्बे) में डालें।",
+      "empty and rinse bottles; flatten boxes.": "बोतलों को खाली कर धोएं; डिब्बों को चपटा करें।",
+      "keep paper free of food grease.": "कागज को खाने के तेल व चिकनाई से दूर रखें।",
+      "keep empty, dry, and free of crumbs.": "खाली, सूखा और टुकड़ों से मुक्त रखें।",
+      "separate from inner seasoning sachets.": "अंदर के मसाले के पाउच को अलग करें।",
+      "place in the dry plastic recovery stream.": "सूखे प्लास्टिक पुनर्चक्रण में डालें।",
+      "tape terminal ends with clear tape to prevent short circuits.": "शॉर्ट सर्किट से बचने के लिए दोनों सिरों पर सेलोटेप लगाएं।",
+      "do not discard in household trash.": "घर के सामान्य कूड़ेदान में बिल्कुल न फेंकें।",
+      "take to an authorized battery / e-waste drop-off point.": "अधिकृत बैटरी या ई-कचरा केंद्र पर जमा करें।",
+      "wrap securely in newspaper or paper bag.": "अखबार या कागज़ की थैली में अच्छी तरह लपेटें।",
+      "mark with a red cross or 'x' for hygiene workers.": "सफाई मित्रों की सुरक्षा के लिए लाल क्रॉस (X) का निशान लगाएं।",
+      "deposit in the designated sanitary / domestic hazardous bin.": "निर्धारित सैनिटरी / घरेलू डिब्बे में डालें।",
+      "shake out trapped food crumbs.": "फंसे हुए खाने के टुकड़े झाड़ लें।",
+      "keep out of the blue recyclable bin.": "नीले रीसाइक्लिंग डिब्बे में न डालें।",
+      "place in grey / black general waste.": "धूसर या काले सामान्य कचरे के डिब्बे में डालें।",
+      "peel apart outer film from soiled sachets.": "बाहरी प्लास्टिक रैपर को गंदे पाउच से अलग करें।",
+      "pick the specific part in wastewise.": "वेस्टवाइज़ में विशिष्ट भाग का चयन करें।",
+      "never guess when local rules conflict.": "नियमों में संदेह होने पर अनुमान न लगाएं।"
+    };
+
+    const HINDI_BIN_MAP = {
+      "green wet bin": "हरा डिब्बा (गीला कचरा)",
+      "blue dry bin": "नीला डिब्बा (सूखा कचरा)",
+      "red hazardous box / drop-off": "लाल डिब्बा (खतरनाक कचरा केंद्र)",
+      "black / yellow sanitary bin": "काला / पीला सैनिटरी डिब्बा",
+      "grey residual bin": "धूसर डिब्बा (सामान्य अवशेष कचरा)"
+    };
+
+    function translateWasteItemName(englishName) {
+      if (!englishName) return "अज्ञात वस्तु";
+      const key = String(englishName).toLowerCase().trim();
+      if (HINDI_ITEM_MAP[key]) return HINDI_ITEM_MAP[key];
+      for (const [k, v] of Object.entries(HINDI_ITEM_MAP)) {
+        if (key.includes(k) || k.includes(key)) return v;
+      }
+      return englishName;
+    }
+
+    function translateWasteMaterial(englishMaterial) {
+      if (!englishMaterial) return "अज्ञात सामग्री";
+      const key = String(englishMaterial).toLowerCase().trim();
+      if (HINDI_MATERIAL_MAP[key]) return HINDI_MATERIAL_MAP[key];
+      for (const [k, v] of Object.entries(HINDI_MATERIAL_MAP)) {
+        if (key.includes(k) || k.includes(key)) return v;
+      }
+      return englishMaterial;
+    }
+
+    function translateInstructionStep(step) {
+      if (!step) return "";
+      const key = String(step).toLowerCase().trim();
+      if (HINDI_INSTRUCTION_MAP[key]) return HINDI_INSTRUCTION_MAP[key];
+      for (const [k, v] of Object.entries(HINDI_INSTRUCTION_MAP)) {
+        if (key.includes(k)) return v;
+      }
+      // Heuristic keyword replacements if dynamic
+      let res = step;
+      res = res.replace(/rinse clean/gi, "धोकर साफ करें");
+      res = res.replace(/dry recyclables?/gi, "सूखे पुनर्चक्रण डिब्बे");
+      res = res.replace(/wet bin|wet \/ compostable bin/gi, "गीले कचरे के हरे डिब्बे");
+      res = res.replace(/place in/gi, "में डालें");
+      res = res.replace(/empty and/gi, "खाली करें और");
+      res = res.replace(/do not/gi, "ना करें");
+      return res;
+    }
+
+    function translatePhysicalBin(binNote) {
+      if (!binNote) return "";
+      const key = String(binNote).toLowerCase().trim();
+      if (HINDI_BIN_MAP[key]) return HINDI_BIN_MAP[key];
+      for (const [k, v] of Object.entries(HINDI_BIN_MAP)) {
+        if (key.includes(k)) return v;
+      }
+      return binNote;
+    }
+
+    function updatePageLanguage(lang) {
+      const isHi = lang === "hi";
+
+      // 1. Update search placeholder and input
+      const searchInput = document.getElementById("manual-search-input");
+      if (searchInput) {
+        searchInput.placeholder = isHi
+          ? "कचरे का नाम लिखें (छिलका, कैन, बैटरी, पैड)..."
+          : "Type item (peel, can, battery, pad)...";
+      }
+
+      // 2. Update preview titles and badges
+      const previewPhotoTitle = document.getElementById("preview-photo-title");
+      if (previewPhotoTitle && previewPhotoTitle.textContent.includes("Photo Preview")) {
+        previewPhotoTitle.textContent = isHi ? "फोटो पूर्वावलोकन" : "Photo Preview";
+      }
+      const upscaleText = document.getElementById("manual-ai-upscale-text");
+      if (upscaleText) {
+        upscaleText.textContent = isHi
+          ? "✨ एआई सुपर-रिज़ॉल्यूशन और डिब्लर"
+          : "✨ AI Upscale & Deblur Reconstruct";
+      }
+      const compareText = document.getElementById("compare-toggle-text");
+      if (compareText) {
+        compareText.textContent = isHi ? "तुलना करें" : "Compare";
+      }
+
+      // 3. Update story beats
+      const storyData = isHi ? [
+        { kicker: "01 · हाथ में लें", h2: "पॉइंट करें। फोटो लें।", p: "हाथ में जो भी कचरा हो, सीधे फोटो लें। परफेक्ट रोशनी की आवश्यकता नहीं।" },
+        { kicker: "02 · अलग करें", h2: "शायद दो अलग डिब्बे।", p: "बाहरी प्लास्टिक रैपर और अंदर का मसाला पाउच एक ही बाल्टी में कभी नहीं जाते।" },
+        { kicker: "03 · वार्ड से पूछें", h2: "आपके वार्ड के नियम।", p: "हम आपकी चुनी गई स्थानीय वार्ड गाइड के नियमों की जाँच करते हैं - सोहना, ग्रीनवैली आदि।" },
+        { kicker: "04 · छांट दिया गया", h2: "सही डिब्बा मिल गया।", p: "रंग, नाम और नियम पुस्तिका का सटीक उद्धरण देखें और बेझिझक कचरा डालें।" }
+      ] : [
+        { kicker: "01 · Hold it up", h2: "Point. Snap.", p: "Just the thing in your hand. No perfect lighting required." },
+        { kicker: "02 · Peel it apart", h2: "Two bins, maybe.", p: "The wrapper and the sachet inside almost never share a bucket." },
+        { kicker: "03 · Ask the ward", h2: "Your street’s rules.", p: "We check the guide you loaded — GreenValley, Sohna, or wherever you are." },
+        { kicker: "04 · Sorted", h2: "That’s the bin.", p: "Color, name, and the line from the rulebook. Then you’re done." }
+      ];
+
+      document.querySelectorAll(".story-beat").forEach((beat, idx) => {
+        const item = storyData[idx];
+        if (!item) return;
+        const k = beat.querySelector(".section-kicker");
+        const h = beat.querySelector("h2");
+        const p = beat.querySelector("p");
+        if (k) k.textContent = item.kicker;
+        if (h) h.textContent = item.h2;
+        if (p) p.textContent = item.p;
+      });
+
+      // 4. Update hand notes
+      document.querySelectorAll(".hand-note").forEach((el) => {
+        if (el.textContent.includes("judges remember") || el.textContent.includes("जज यही याद")) {
+          el.textContent = isHi ? "जज यही याद रखते हैं: स्थानीय नियम, कोई भाषण नहीं" : "the bit judges remember: local rules, not a lecture";
+        } else if (el.textContent.includes("tilt any card") || el.textContent.includes("किसी भी कार्ड")) {
+          el.textContent = isHi ? "किसी भी कार्ड को 3D में घुमाएं या वार्ड नियमावली देखने के लिए पलटें" : "tilt any card in 3D space or flip it to peek at the ward rulebook";
+        }
+      });
+
+      // 5. Update quick preset chip labels
+      const presetButtons = document.querySelectorAll("#view-home .flex.flex-wrap.gap-2.pt-1 button");
+      if (presetButtons && presetButtons.length >= 4) {
+        if (isHi) {
+          presetButtons[0].innerHTML = "🍌 केले का छिलका <span class='sr-only'>(गीला)</span>";
+          presetButtons[1].innerHTML = "🥫 एल्युमीनियम कैन <span class='sr-only'>(सूखा)</span>";
+          presetButtons[2].innerHTML = "🔋 एए एल्कलाइन बैटरी <span class='sr-only'>(खतरनाक)</span>";
+          presetButtons[3].innerHTML = "🧴 सैनिटरी पैड <span class='sr-only'>(सैनिटरी)</span>";
+        } else {
+          presetButtons[0].innerHTML = "🍌 Banana Peel <span class='sr-only'>(Wet)</span>";
+          presetButtons[1].innerHTML = "🥫 Aluminum Soda Can <span class='sr-only'>(Dry)</span>";
+          presetButtons[2].innerHTML = "🔋 AA Alkaline Battery <span class='sr-only'>(Hazardous)</span>";
+          presetButtons[3].innerHTML = "🧴 Sanitary Pad <span class='sr-only'>(Yellow Sanitary)</span>";
+        }
+      }
+
+      // 6. Re-render flashcards with language
+      renderAll3DFlashcardDecks();
+
+      // 7. Re-render recent scans
+      renderHomeRecentScans();
+
+      // 8. If an active scan result is displayed, re-render it in the selected language!
+      if (currentEvaluationResult) {
+        renderResultCard();
+      }
+    }
+
     function renderResultCard() {
       const res = currentEvaluationResult;
       if (!res) return;
 
       const activeTheme = applyCategoryTheme(res.category, res.status);
+      const isHi = currentLang === "hi";
 
       const section = document.getElementById("result-section");
       section.classList.remove("hidden");
@@ -5314,21 +5583,53 @@
       iconEl.textContent = activeTheme.emoji || "❓";
       if (svgMount) svgMount.innerHTML = build3DCategorySVG(activeTheme.key);
 
-      statusPill.textContent = `Status: ${res.status.replace("_", " ").toUpperCase()}`;
+      const HINDI_CAT_TITLES = {
+        biodegradable: "गीला / जैविक कचरा (कम्पोस्ट योग्य)",
+        dry_recyclable: "सूखा कचरा / पुनर्चक्रण योग्य (रीसायकल)",
+        special_handling: "खतरनाक / विशेष निपटान चेतावनी",
+        sanitary_medical: "सैनिटरी / चिकित्सीय अपशिष्ट",
+        general_waste: "सामान्य गैर-पुनर्चक्रण योग्य कचरा",
+        unresolved: "कचरे की श्रेणी स्पष्ट नहीं हो सकी"
+      };
+      const HINDI_CAT_SUBTITLES = {
+        biodegradable: "खाद बनाने योग्य जैविक कचरा (Green Wet Stream)",
+        dry_recyclable: "सत्यापित सूखा पुनर्चक्रण योग्य कचरा (Blue Dry Stream)",
+        special_handling: "विशेष निपटान केंद्र में जमा करें (Hazardous Drop-off)",
+        sanitary_medical: "कागज में लपेटकर अलग निस्तारित करें (Sanitary Stream)",
+        general_waste: "सत्यापित अवशेष कचरा (General Residual)",
+        unresolved: "सत्यापन या स्पष्टीकरण आवश्यक है"
+      };
+
+      const HINDI_STATUS_MAP = {
+        recommended: "स्थिति: अनुशंसित (RECOMMENDED)",
+        clarification_needed: "स्थिति: स्पष्टीकरण आवश्यक",
+        unresolved: "स्थिति: अनिर्णीत",
+        error: "स्थिति: त्रुटि"
+      };
+
+      statusPill.textContent = isHi
+        ? (HINDI_STATUS_MAP[res.status] || `स्थिति: ${res.status.toUpperCase()}`)
+        : `Status: ${res.status.replace("_", " ").toUpperCase()}`;
+
       if (confBox) {
         confBox.style.backgroundColor = activeTheme.badgeBg;
         confBox.style.color = activeTheme.badgeText;
       }
 
-      catTitle.textContent = activeTheme.label;
-      catSub.textContent = activeTheme.subtitle;
+      catTitle.textContent = isHi ? (HINDI_CAT_TITLES[activeTheme.key] || activeTheme.label) : activeTheme.label;
+      catSub.textContent = isHi ? (HINDI_CAT_SUBTITLES[activeTheme.key] || activeTheme.subtitle) : activeTheme.subtitle;
       if (catKeyBadge) catKeyBadge.textContent = res.category || "unresolved";
 
-      if (activeGuide && activeGuide.isDemo) demoPill.classList.remove("hidden");
-      else demoPill.classList.add("hidden");
+      if (activeGuide && activeGuide.isDemo) {
+        demoPill.textContent = isHi ? "डेमो वार्ड गाइड" : "Demo Guide";
+        demoPill.classList.remove("hidden");
+      } else {
+        demoPill.classList.add("hidden");
+      }
 
-      const confMap = { high: "High Confidence", medium: "Medium Confidence", low: "Low Confidence" };
-      confBadge.textContent = confMap[res.item.confidence] || "Low Confidence";
+      const confMapEn = { high: "High Confidence", medium: "Medium Confidence", low: "Low Confidence" };
+      const confMapHi = { high: "उच्च सटीकता (High Confidence)", medium: "मध्यम सटीकता (Medium Confidence)", low: "कम सटीकता (Low Confidence)" };
+      confBadge.textContent = isHi ? (confMapHi[res.item.confidence] || "कम सटीकता") : (confMapEn[res.item.confidence] || "Low Confidence");
 
       const thumbImg = document.getElementById("result-thumb-img");
       if (currentCapturedImageDataUrl) {
@@ -5338,26 +5639,40 @@
         thumbImg.classList.add("hidden");
       }
 
-      document.getElementById("result-item-name").textContent =
-        res.userCorrection ? `${res.userCorrection.correctedItemName} (Original AI: ${res.item.name})` : res.item.name;
-      document.getElementById("result-item-material").textContent =
-        res.userCorrection?.correctedMaterial || res.item.material;
+      const rawItemName = res.userCorrection ? res.userCorrection.correctedItemName : res.item.name;
+      const displayItemName = isHi ? translateWasteItemName(rawItemName) : rawItemName;
+      document.getElementById("result-item-name").textContent = res.userCorrection
+        ? `${displayItemName} (${isHi ? "मूल एआई" : "Original AI"}: ${res.item.name})`
+        : displayItemName;
+
+      const rawMaterial = res.userCorrection?.correctedMaterial || res.item.material;
+      document.getElementById("result-item-material").textContent = isHi
+        ? translateWasteMaterial(rawMaterial)
+        : rawMaterial;
 
       const corrBadge = document.getElementById("result-corrected-badge");
-      if (res.userCorrection) corrBadge.classList.remove("hidden");
-      else corrBadge.classList.add("hidden");
+      if (res.userCorrection) {
+        corrBadge.textContent = isHi ? "✓ संशोधित" : "✓ Corrected";
+        corrBadge.classList.remove("hidden");
+      } else {
+        corrBadge.classList.add("hidden");
+      }
 
       const clarBox = document.getElementById("result-clarification-box");
       const clarList = document.getElementById("clarification-options-list");
       if (res.clarificationQuestion && Array.isArray(res.clarificationOptions) && res.clarificationOptions.length > 0) {
         clarBox.classList.remove("hidden");
-        document.getElementById("clarification-question-text").textContent = res.clarificationQuestion;
+        document.getElementById("clarification-question-text").textContent = isHi
+          ? "आप वस्तु के किस भाग का निपटान करना चाहते हैं?"
+          : res.clarificationQuestion;
         clarList.innerHTML = "";
         res.clarificationOptions.forEach((opt) => {
           const b = document.createElement("button");
           b.type = "button";
           b.className = "p-3 rounded-xl bg-white hover:bg-[#4285F4] text-[#202124] hover:text-white border border-amber-300 font-bold text-xs text-left transition-all flex flex-col gap-0.5 shadow-sm";
-          b.innerHTML = `<span>${opt.label}</span><span class="text-[10px] opacity-75 font-normal">${opt.material}</span>`;
+          const optLabel = isHi ? translateWasteItemName(opt.label) : opt.label;
+          const optMat = isHi ? translateWasteMaterial(opt.material) : opt.material;
+          b.innerHTML = `<span>${optLabel}</span><span class="text-[10px] opacity-75 font-normal">${optMat}</span>`;
           b.onclick = function () { selectClarificationPart(opt.id); };
           clarList.appendChild(b);
         });
@@ -5366,20 +5681,39 @@
       }
 
       const specialBox = document.getElementById("result-special-alert-box");
-      if (res.category === "special_handling") specialBox.classList.remove("hidden");
-      else specialBox.classList.add("hidden");
+      if (res.category === "special_handling") {
+        specialBox.classList.remove("hidden");
+        const alertP = specialBox.querySelector("p");
+        if (alertP) {
+          alertP.textContent = isHi
+            ? "⚠️ लाल रंग ऐप की सुरक्षा चेतावनी है, सामान्य लाल डिब्बा नहीं। कृपया नीचे दिए गए अधिकृत केंद्र पर जमा करें।"
+            : "⚠️ Red is an app alert theme, not a generic red bin instruction. Follow the specific drop-off route below.";
+        }
+      } else {
+        specialBox.classList.add("hidden");
+      }
 
       const sanitaryBox = document.getElementById("result-sanitary-alert-box");
       if (sanitaryBox) {
-        if (res.category === "sanitary_medical") sanitaryBox.classList.remove("hidden");
-        else sanitaryBox.classList.add("hidden");
+        if (res.category === "sanitary_medical") {
+          sanitaryBox.classList.remove("hidden");
+          const alertP = sanitaryBox.querySelector("p");
+          if (alertP) {
+            alertP.textContent = isHi
+              ? "🧴 सैनिटरी अपशिष्ट को कागज में अच्छी तरह लपेटें। नुकीली सुइयों या बायोमेडिकल से अलग रखें।"
+              : "🧴 Wrap sanitary waste securely. Keep separate from clinical sharps/needles.";
+          }
+        } else {
+          sanitaryBox.classList.add("hidden");
+        }
       }
 
       const unverifiedBox = document.getElementById("result-unverified-warning");
       if (res.category === "unresolved" || res.status === "unresolved" || res.status === "error") {
         unverifiedBox.classList.remove("hidden");
-        document.getElementById("result-unverified-reason").textContent =
-          res.reason || "Could not verify the correct disposal category from the selected local guide.";
+        document.getElementById("result-unverified-reason").textContent = isHi
+          ? (res.reason ? translateInstructionStep(res.reason) : "चयनित स्थानीय गाइड से इस कचरे की सही श्रेणी सत्यापित नहीं हो सकी।")
+          : (res.reason || "Could not verify the correct disposal category from the selected local guide.");
       } else {
         unverifiedBox.classList.add("hidden");
       }
@@ -5388,13 +5722,14 @@
       instList.innerHTML = "";
       (res.instructions || []).forEach((step) => {
         const li = document.createElement("li");
-        li.textContent = step;
+        li.textContent = isHi ? translateInstructionStep(step) : step;
         instList.appendChild(li);
       });
 
       const binBox = document.getElementById("result-physical-bin-box");
       if (res.physicalBinNote) {
-        binBox.textContent = `🗑️ ${res.physicalBinNote}`;
+        const binText = isHi ? translatePhysicalBin(res.physicalBinNote) : res.physicalBinNote;
+        binBox.textContent = `🗑️ ${binText}`;
         binBox.classList.remove("hidden");
       } else {
         binBox.classList.add("hidden");
@@ -5403,9 +5738,11 @@
       const evCard = document.getElementById("result-evidence-card");
       if (res.evidence) {
         evCard.classList.remove("hidden");
-        document.getElementById("evidence-page-section").textContent = `p.${res.evidence.page || "—"} • ${res.evidence.section || ""}`;
+        document.getElementById("evidence-page-section").textContent = isHi
+          ? `पृष्ठ ${res.evidence.page || "—"} • ${res.evidence.section || ""}`
+          : `p.${res.evidence.page || "—"} • ${res.evidence.section || ""}`;
         document.getElementById("evidence-excerpt-text").textContent = `"${res.evidence.excerpt}"`;
-        document.getElementById("evidence-guide-name").textContent = res.evidence.guideName;
+        document.getElementById("evidence-guide-name").textContent = isHi ? "वार्ड नियमावली" : res.evidence.guideName;
         document.getElementById("evidence-guide-version").textContent = `v${res.evidence.version}`;
       } else {
         evCard.classList.add("hidden");
@@ -6066,13 +6403,7 @@
     function toggleColorMode() {
       currentColorMode = currentColorMode === "dark" ? "light" : "dark";
       if (currentColorMode === "dark") {
-        const savedMode = (function() { try { return localStorage.getItem("wastewise_color_mode") || "dark"; } catch(e) { return "dark"; } })();
-      currentColorMode = savedMode;
-      if (currentColorMode === "dark") {
         document.documentElement.setAttribute("data-color-mode", "dark");
-      } else {
-        document.documentElement.removeAttribute("data-color-mode");
-      }
       } else {
         document.documentElement.removeAttribute("data-color-mode");
       }
@@ -6085,14 +6416,19 @@
 
     function toggleLanguage() {
       currentLang = currentLang === "en" ? "hi" : "en";
+      try {
+        localStorage.setItem("wastewise_language", currentLang);
+      } catch (e) {}
       document.documentElement.lang = currentLang === "hi" ? "hi" : "en";
-      document.getElementById("lang-toggle-label").textContent = currentLang === "en" ? "हिन्दी" : "English";
+      const langLabel = document.getElementById("lang-toggle-label");
+      if (langLabel) langLabel.textContent = currentLang === "en" ? "हिन्दी" : "English";
       const dict = I18N[currentLang];
       document.querySelectorAll("[data-i18n]").forEach((el) => {
         const key = el.getAttribute("data-i18n");
-        if (dict[key] !== undefined) el.textContent = dict[key];
+        if (dict && dict[key] !== undefined) el.textContent = dict[key];
       });
       updateColorModeButtonUI();
+      updatePageLanguage(currentLang);
     }
 
     let toastTimer = null;
@@ -6222,8 +6558,70 @@
     ];
 
     function buildAceternityFlashcardHTML(card, scopePrefix) {
+      const isHi = currentLang === "hi";
       const domId = `${scopePrefix}-${card.id}`;
       const svgArt = build3DCategorySVG(card.categoryKey);
+
+      const HINDI_FLASHCARD_MAP = {
+        "flash-wet-compost": {
+          title: "गीला व रसोई जैविक कचरा",
+          tagPill: "🌱 हरा डिब्बा (Wet)",
+          handNote: "“तरल पदार्थ निकालें — कोई प्लास्टिक लाइनर नहीं।”",
+          summary: "फलों और सब्जियों के छिलके, बचा हुआ खाना, चायपत्ती और प्राकृतिक बायोमास।",
+          floatingChips: ["🍌 केले का छिलका", "☕ चायपत्ती", "🥬 सब्जियों के छिलके"],
+          ruleSteps: ["अतिरिक्त तरल पदार्थ निकालें", "हरे गीले कचरे के डिब्बे में डालें", "प्लास्टिक की थैलियों में कभी न बांधें"]
+        },
+        "flash-dry-recycle": {
+          title: "साफ सूखा पुनर्चक्रण योग्य",
+          tagPill: "♻️ नीला डिब्बा (Dry)",
+          handNote: "“धोएं, सुखाएं और चपटा करें — इसे नया जीवन दें।”",
+          summary: "एल्युमीनियम के डिब्बे, पीईटी प्लास्टिक की बोतलें, गत्ता और साफ सूखा कागज।",
+          floatingChips: ["🥫 एल्युमीनियम कैन", "🧴 पीईटी बोतल", "📦 गत्ते का डिब्बा"],
+          ruleSteps: ["कैन व बोतलों को पानी से धोएं", "डिब्बों को चपटा करके जगह बचाएं", "नीले सूखे रीसाइक्लिंग डिब्बे में डालें"]
+        },
+        "flash-medical-sanitary": {
+          title: "सैनिटरी व व्यक्तिगत देखभाल",
+          tagPill: "🧴 पीला / सैनिटरी डिब्बा",
+          handNote: "“अखबार में अच्छी तरह लपेटें — सफाई मित्रों की सुरक्षा करें।”",
+          summary: "प्रयुक्त सैनिटरी पैड, डायपर, टैम्पोन, कॉटन स्वैब और घरेलू ड्रेसिंग।",
+          floatingChips: ["🩹 सैनिटरी पैड", "👶 डायपर", "棉 कॉटन स्वैब"],
+          ruleSteps: ["अखबार या कागज़ की थैली में लपेटें", "निर्धारित सैनिटरी डिब्बे में डालें", "कभी भी फ्लश न करें"]
+        },
+        "flash-hazardous": {
+          title: "खतरनाक, ई-कचरा व नुकीली वस्तुएं",
+          tagPill: "🛡️ विशेष टेक-बैक अलर्ट",
+          handNote: "“बैटरी, पारा व सुई सामान्य कूड़ेदान में कभी नहीं जाते।”",
+          summary: "एए/लिथियम बैटरी, पुराने चार्जर, सीएफएल बल्ब, पेंट के डिब्बे और सुईयां।",
+          floatingChips: ["🔋 एए बैटरी", "💉 सिरिंज / सुई", "🔌 ई-कचरा"],
+          ruleSteps: ["बैटरी के सिरों पर सेलोटेप लगाएं", "घर के गीले या सूखे डिब्बे में न डालें", "अधिकृत ई-कचरा केंद्र पर जमा करें"]
+        },
+        "flash-general": {
+          title: "सामान्य गैर-पुनर्चक्रण योग्य",
+          tagPill: "🗑️ धूसर डिब्बा (Residual)",
+          handNote: "“चमकदार फॉयल वाले चिप्स के पैकेट रीसायकल नहीं हो सकते।”",
+          summary: "मल्टी-लेयर चिप्स पैकेट, थर्मोकोल कप और घिसे हुए किचन स्पंज।",
+          floatingChips: ["🍟 चिप्स पैकेट", "🥤 थर्मोकोल", "🧽 किचन स्पंज"],
+          ruleSteps: ["अंदर के खाने के टुकड़े झाड़ लें", "नीले रीसाइक्लिंग डिब्बे से दूर रखें", "काले या धूसर सामान्य डिब्बे में डालें"]
+        },
+        "flash-multipart": {
+          title: "जटिल बहु-भाग अपशिष्ट",
+          tagPill: "🧩 अलग करें या स्पष्ट करें",
+          handNote: "“रुकें — बाहरी रैपर सूखा प्लास्टिक है, अंदर का मसाला पाउच तैलीय है!”",
+          summary: "इंस्टेंट नूडल्स पैकेट, कंपोजिट वस्तुएं या अप्रमाणित मिश्रित कचरा।",
+          floatingChips: ["🍜 नूडल्स पैकेट", "☕ सिरामिक मग", "❓ अज्ञात वस्तु"],
+          ruleSteps: ["साफ बाहरी रैपर को अलग करें", "वेस्टवाइज़ में सही भाग चुनें", "संदेह होने पर गाइड से जांचें"]
+        }
+      };
+
+      const cData = isHi && HINDI_FLASHCARD_MAP[card.id] ? {
+        title: HINDI_FLASHCARD_MAP[card.id].title,
+        tagPill: HINDI_FLASHCARD_MAP[card.id].tagPill,
+        handNote: HINDI_FLASHCARD_MAP[card.id].handNote,
+        summary: HINDI_FLASHCARD_MAP[card.id].summary,
+        floatingChips: HINDI_FLASHCARD_MAP[card.id].floatingChips,
+        ruleSteps: HINDI_FLASHCARD_MAP[card.id].ruleSteps
+      } : card;
+
       return `
         <div
           id="${domId}"
@@ -6233,93 +6631,94 @@
           data-flipped="false"
           tabindex="0"
           role="region"
-          aria-label="${card.title} 3D Flashcard"
+          aria-label="${cData.title} 3D Flashcard"
           style="--card-accent: ${card.accent}; --card-glow: ${card.glow};"
         >
           <div class="ac-card-body flex flex-col justify-between gap-4">
             <div class="ac-card-glare" aria-hidden="true"></div>
 
-            <!-- Top Row: Kicker + Bin Pill (translateZ: 50) -->
             <div class="ac-card-item flex items-center justify-between gap-2" data-translate-z="50">
               <span class="font-mono text-[10px] tracking-widest uppercase text-[#5F6368]">${card.cardNumber}</span>
               <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#F1F3F4] border border-[#DADCE0] text-[#202124] shadow-sm">
-                ${card.tagPill}
+                ${cData.tagPill}
               </span>
             </div>
 
-            <!-- Title & Handwritten Note (translateZ: 65) -->
             <div class="ac-card-item space-y-1" data-translate-z="65">
-              <h3 class="font-display text-xl font-bold text-[#202124] leading-tight">${card.title}</h3>
-              <p class="font-note text-[1.05rem] text-[#1A73E8] leading-snug">${card.handNote}</p>
+              <h3 class="font-display text-xl font-bold text-[#202124] leading-tight">${cData.title}</h3>
+              <p class="font-note text-[1.05rem] text-[#1A73E8] leading-snug">${cData.handNote}</p>
             </div>
 
-            <!-- FRONT FACE: 3D Floating Visual Stage + Floating Chips (translateZ: 100) -->
-            <div class="ac-flashcard-front space-y-3.5">
-              <div
-                class="ac-card-item ac-flashcard-stage ${card.gradClass} p-4"
-                data-translate-z="100"
-                data-rotate-x="4"
-                data-rotate-z="-2"
-              >
-                <div class="pointer-events-none absolute -right-8 -top-8 w-28 h-28 rounded-full bg-white/20 blur-xl"></div>
-                <div class="pointer-events-none absolute -left-8 -bottom-8 w-28 h-28 rounded-full bg-black/25 blur-xl"></div>
-
-                <div class="relative z-10 flex items-center justify-between w-full gap-3">
-                  <div class="w-20 h-20 rounded-2xl bg-black/25 backdrop-blur-md border border-white/25 p-2.5 flex items-center justify-center shrink-0 shadow-2xl">
-                    ${svgArt}
-                  </div>
-                  <div class="flex flex-col items-end gap-1.5">
-                    ${card.floatingChips.map((chip, idx) => `
-                      <span
-                        class="ac-card-item px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-[#202124] border border-white/60 backdrop-blur-md shadow-md"
-                        data-translate-z="${115 - idx * 12}"
-                      >
-                        ${chip}
-                      </span>
-                    `).join("")}
-                  </div>
-                </div>
+            <div class="ac-card-item relative h-40 flex items-center justify-center my-1" data-translate-z="80">
+              <div class="w-28 h-28 flex items-center justify-center transform group-hover/card:scale-110 transition-transform duration-500">
+                ${svgArt}
               </div>
-
-              <p class="ac-card-item text-xs text-[#5F6368] leading-relaxed" data-translate-z="45">
-                ${card.summary}
-              </p>
-            </div>
-
-            <!-- BACK FACE: Flipped Ward Rulebook Excerpt & Steps (translateZ: 85) -->
-            <div class="ac-flashcard-back space-y-3">
-              <div
-                class="ac-card-item rounded-2xl bg-[#F8F9FA] border border-[#DADCE0] p-3.5 space-y-2 shadow-inner"
-                data-translate-z="85"
-              >
-                <div class="flex items-center justify-between text-[11px] font-mono text-[#1A73E8]">
-                  <span>📖 Ward Rulebook</span>
-                  <span>${card.ruleSection}</span>
-                </div>
-                <blockquote class="text-xs italic text-[#202124] border-l-2 border-[#34A853] pl-2.5 py-0.5">
-                  "${card.ruleExcerpt}"
-                </blockquote>
-                <ul class="space-y-1 text-[11px] text-[#5F6368] list-disc pl-4 pt-1">
-                  ${card.ruleSteps.map((st) => `<li>${st}</li>`).join("")}
-                </ul>
+              <div class="pointer-events-none absolute inset-0 flex flex-wrap items-center justify-between gap-2 p-1">
+                <span class="ac-chip ac-chip-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/95 text-[#202124] border border-[#DADCE0] shadow-md transform -rotate-6">
+                  ${cData.floatingChips[0]}
+                </span>
+                <span class="ac-chip ac-chip-2 text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/95 text-[#202124] border border-[#DADCE0] shadow-md transform rotate-6 self-end">
+                  ${cData.floatingChips[1]}
+                </span>
               </div>
             </div>
 
-            <!-- Footer Actions (translateZ: 40) -->
-            <div class="ac-card-item pt-2 border-t border-[#DADCE0] flex items-center justify-between gap-2" data-translate-z="40">
+            <p class="ac-card-item text-xs text-[#5F6368] line-clamp-2 leading-relaxed" data-translate-z="40">
+              ${cData.summary}
+            </p>
+
+            <div class="ac-card-item pt-2 border-t border-[#DADCE0] flex items-center justify-between gap-2" data-translate-z="55">
               <button
                 type="button"
-                onclick="toggle3DFlashcardFlip('${domId}', event)"
-                class="px-3 py-1.5 rounded-xl bg-[#F1F3F4] hover:bg-[#E8EAED] border border-[#DADCE0] text-xs font-bold text-[#202124] transition-colors"
+                onclick="flipAceternityCard('${domId}')"
+                class="px-3 py-1.5 rounded-xl bg-white hover:bg-[#F1F3F4] text-[#202124] text-xs font-bold border border-[#DADCE0] transition-colors shadow-sm flex items-center gap-1"
               >
-                ↻ Flip Rule
+                <span>↻</span>
+                <span>${isHi ? "नियम देखें" : "Flip Rule"}</span>
               </button>
               <button
                 type="button"
                 onclick="quickAnalyzeSample('${card.sampleKey}')"
                 class="px-3.5 py-1.5 rounded-xl bg-[#4285F4] text-white hover:bg-[#1A73E8] text-xs font-extrabold transition-colors shadow-sm"
               >
-                Try in Scanner →
+                ${isHi ? "स्कैनर में आज़माएं →" : "Try in Scanner →"}
+              </button>
+            </div>
+          </div>
+
+          <div class="ac-card-back flex flex-col justify-between gap-3 text-[#202124]" aria-hidden="true">
+            <div class="flex items-center justify-between gap-2 border-b border-[#DADCE0] pb-2">
+              <span class="text-[10px] font-mono uppercase tracking-widest text-[#1A73E8] font-bold">${card.ruleSection}</span>
+              <button
+                type="button"
+                onclick="flipAceternityCard('${domId}')"
+                class="text-xs text-[#5F6368] hover:text-[#202124] font-bold px-2 py-0.5 rounded-lg hover:bg-black/5"
+              >
+                ✕ ${isHi ? "वापस" : "Back"}
+              </button>
+            </div>
+
+            <div class="space-y-1.5">
+              <h4 class="text-xs font-mono uppercase tracking-wider text-[#5F6368] font-bold">${isHi ? "आधिकारिक वार्ड नियम" : "Official Ward Rule"}</h4>
+              <blockquote class="text-xs italic text-[#202124] bg-white p-3 rounded-xl border border-[#DADCE0] border-l-4 border-l-[#4285F4]">
+                "${card.ruleExcerpt}"
+              </blockquote>
+            </div>
+
+            <div class="space-y-1">
+              <h4 class="text-xs font-mono uppercase tracking-wider text-[#5F6368] font-bold">${isHi ? "निपटान चरण" : "Required Action"}</h4>
+              <ul class="text-xs text-[#202124] space-y-1 list-disc pl-4">
+                ${cData.ruleSteps.map((s) => `<li>${s}</li>`).join("")}
+              </ul>
+            </div>
+
+            <div class="pt-2 border-t border-[#DADCE0] flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onclick="quickAnalyzeSample('${card.sampleKey}')"
+                class="w-full py-2 rounded-xl bg-[#4285F4] text-white hover:bg-[#1A73E8] text-xs font-extrabold transition-colors shadow-sm text-center"
+              >
+                ${isHi ? "इस आइटम का परीक्षण करें" : "Test This Item in Scanner"}
               </button>
             </div>
           </div>
@@ -7335,7 +7734,26 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      document.documentElement.setAttribute("data-color-mode", "dark");
+      const savedMode = (function() { try { return localStorage.getItem("wastewise_color_mode") || "dark"; } catch(e) { return "dark"; } })();
+      currentColorMode = savedMode;
+      if (currentColorMode === "dark") {
+        document.documentElement.setAttribute("data-color-mode", "dark");
+      } else {
+        document.documentElement.removeAttribute("data-color-mode");
+      }
+      const savedLang = (function() { try { return localStorage.getItem("wastewise_language") || "en"; } catch(e) { return "en"; } })();
+      if (savedLang === "hi") {
+        currentLang = "hi";
+        document.documentElement.lang = "hi";
+        const langLabel = document.getElementById("lang-toggle-label");
+        if (langLabel) langLabel.textContent = "English";
+        const dict = I18N.hi;
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (dict[key] !== undefined) el.textContent = dict[key];
+        });
+        updatePageLanguage("hi");
+      }
       updateColorModeButtonUI();
       initWasteWiseAuthExperience();
       applyCategoryTheme("brand", "idle");
