@@ -1086,10 +1086,26 @@
             loading="eager"
           />
         </div>
-        <!-- Link Display / Copy Chip -->
-        <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-mono text-blue-300 max-w-full truncate">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="pwa-qr-url-text" class="truncate"></span>
+        <!-- Network URL & One-Click Copy -->
+        <div class="mt-3 w-full flex items-center gap-1.5 p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+          <span class="w-2 h-2 ml-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+          <input
+            id="pwa-url-input"
+            type="text"
+            readonly
+            value=""
+            aria-label="Direct mobile URL"
+            class="flex-1 bg-transparent px-2 py-1 text-[11px] font-mono text-blue-300 focus:outline-none truncate cursor-pointer"
+            onclick="this.select()"
+          />
+          <button
+            type="button"
+            id="pwa-copy-btn"
+            onclick="copyPwaUrl()"
+            class="px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 hover:text-white font-semibold text-[11px] transition-all shrink-0 cursor-pointer"
+          >
+            Copy
+          </button>
         </div>
       </div>
 
@@ -5060,9 +5076,10 @@
     }
   </script>
 
-  <!-- PWA & QR Code Modal Logic -->
+  <!-- PWA & QR Code Modal Logic (Auto LAN IP Resolution) -->
   <script>
     let deferredPwaPrompt = null;
+    let cachedLanUrl = null;
 
     window.addEventListener('beforeinstallprompt', function(e) {
       e.preventDefault();
@@ -5071,32 +5088,82 @@
       if (installRow) installRow.classList.remove('hidden');
     });
 
-    function getPwaInstallUrl() {
+    // Auto-discover LAN IP so scanning from phones on same WiFi reaches this PC
+    async function fetchLanHostInfo() {
       try {
-        if (window.parent && window.parent !== window && window.parent.location.origin) {
-          return window.parent.location.origin + '/';
+        const res = await fetch('/api/host-info');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.url) {
+            cachedLanUrl = data.url;
+            return data.url;
+          }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[PWA] Note: /api/host-info fetch:', e);
+      }
+      return null;
+    }
+
+    // Pre-fetch on page load
+    fetchLanHostInfo();
+
+    async function getPwaInstallUrl() {
+      const currentHost = window.location.hostname;
+      // If already accessed via an IP address (e.g. 10.x.x.x or 192.168.x.x) or domain, use that!
+      if (currentHost !== 'localhost' && currentHost !== '127.0.0.1' && currentHost !== '::1') {
+        try {
+          if (window.parent && window.parent !== window && window.parent.location.origin) {
+            return window.parent.location.origin + '/';
+          }
+        } catch (e) {}
+        return window.location.origin + '/';
+      }
+
+      // If user is viewing on localhost on their PC, mobile phones CANNOT use localhost.
+      // We must provide the real LAN IP!
+      if (!cachedLanUrl) {
+        await fetchLanHostInfo();
+      }
+      if (cachedLanUrl) {
+        return cachedLanUrl + '/';
+      }
+
       return window.location.origin + '/';
     }
 
-    function openPwaModal() {
+    function updateQrDisplay(url) {
+      const qrImg = document.getElementById('pwa-qr-img');
+      const urlInput = document.getElementById('pwa-url-input');
+      if (urlInput) urlInput.value = url;
+      if (qrImg) {
+        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=' + encodeURIComponent(url);
+      }
+    }
+
+    function copyPwaUrl() {
+      const urlInput = document.getElementById('pwa-url-input');
+      if (!urlInput) return;
+      navigator.clipboard.writeText(urlInput.value).then(function() {
+        const btn = document.getElementById('pwa-copy-btn');
+        if (btn) {
+          btn.textContent = '✓ Copied';
+          setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+        }
+      });
+    }
+
+    async function openPwaModal() {
       const modal = document.getElementById('pwa-install-modal');
       const qrImg = document.getElementById('pwa-qr-img');
-      const urlText = document.getElementById('pwa-qr-url-text');
       if (!modal || !qrImg) return;
-
-      const targetUrl = getPwaInstallUrl();
-      if (urlText) urlText.textContent = targetUrl;
-
-      // Scannable QR code generated using qrserver API
-      const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=4&data=' + encodeURIComponent(targetUrl);
-      qrImg.src = qrApiUrl;
 
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
-
       window.addEventListener('keydown', handlePwaKeydown);
+
+      const targetUrl = await getPwaInstallUrl();
+      updateQrDisplay(targetUrl);
     }
 
     function closePwaModal() {
