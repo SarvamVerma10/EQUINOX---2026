@@ -7,7 +7,7 @@
  *   - NEVER intercept /api/* routes (leave directly to native network)
  */
 
-const CACHE_NAME = 'wastewise-v2';
+const CACHE_NAME = 'wastewise-v3';
 const OFFLINE_URL = '/wastewise.html';
 
 /** Files to pre-cache on SW install */

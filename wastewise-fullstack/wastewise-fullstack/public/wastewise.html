@@ -1012,14 +1012,13 @@
           onclick="openPwaModal()"
           aria-label="Install App / Get QR Code"
           title="Install WasteWise PWA / Scan QR Code"
-          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 hover:border-blue-400 text-xs font-semibold text-blue-300 hover:text-white transition-all focus-ring shadow-sm cursor-pointer"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold text-xs transition-all shadow-md hover:shadow-blue-500/30 cursor-pointer active:scale-95"
         >
-          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
             <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
             <line x1="12" y1="18" x2="12.01" y2="18"/>
           </svg>
-          <span class="hidden sm:inline">📱 Install PWA</span>
-          <span class="sm:hidden">📱 App</span>
+          <span>📱 Install App (QR)</span>
         </button>
       </div>
     </div>
@@ -1169,6 +1168,18 @@
               </label>
               <input id="gallery-file-input" type="file" accept="image/*" class="hidden" onchange="handleFileInputChange(event)" />
               <input id="mobile-capture-input" type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFileInputChange(event)" />
+
+              <!-- Prominent PWA Install / QR Button -->
+              <button
+                type="button"
+                id="hero-pwa-qr-btn"
+                onclick="openPwaModal()"
+                class="cursor-pointer px-5 py-3.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95"
+                title="Scan QR code to install WasteWise on your phone"
+              >
+                <span>📱</span>
+                <span>Install PWA / QR Code</span>
+              </button>
             </div>
 
             <!-- Minimal Search Input + Clean Quick Pills -->
@@ -1238,6 +1249,15 @@
                     <button type="button" onclick="triggerMobileCaptureFallback()" class="px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-medium text-xs flex items-center gap-1.5">
                       <span>📱</span>
                       <span data-i18n="nativeCaptureFallbackBtn">Phone camera</span>
+                    </button>
+                    <button
+                      type="button"
+                      onclick="openPwaModal()"
+                      class="px-4 py-2.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-white border border-blue-500/30 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Open QR Code to install app"
+                    >
+                      <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                      <span>Get QR Code</span>
                     </button>
                   </div>
 
